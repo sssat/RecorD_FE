@@ -94,7 +94,7 @@ function UserProfileCard() {
 
 function Sidebar() {
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white lg:min-h-screen lg:w-[300px] lg:border-b-0 lg:border-r">
+    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white lg:h-screen lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
       <div className="border-b border-slate-200 px-6 py-7">
         <Link to="/" className="flex items-center gap-4">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 via-white to-lime-100 shadow-sm ring-1 ring-slate-200">
