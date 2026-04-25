@@ -1,16 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 const sidebarItems = [
-  { label: '대시보드', icon: DashboardIcon, active: true },
-  { label: '회의록', icon: DocumentIcon },
-  { label: '캘린더', icon: CalendarIcon },
-  { label: '프로젝트', icon: FolderIcon },
+  { label: '대시보드', icon: DashboardIcon, to: '/', end: true },
+  { label: '회의록', icon: DocumentIcon, to: '/records' },
+  { label: '캘린더', icon: CalendarIcon, to: '/calendar' },
+  { label: '프로젝트', icon: FolderIcon, to: '/projects' },
 ];
 
 function SidebarIconShell({ children, active }) {
   return (
     <span
-      className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+      className={`flex h-10 w-10 items-center justify-center rounded-2xl transition ${
         active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
       }`}
     >
@@ -82,7 +82,7 @@ function UserProfileCard() {
       <div className="min-w-0 flex-1">
         <p className="text-base font-semibold text-slate-900">로그인 해주세요</p>
         <p className="truncate text-sm text-slate-500">
-          카카오 로그인 화면으로 이동합니다
+          카카오 로그인 페이지로 이동합니다
         </p>
       </div>
       <span className="rounded-full bg-white p-2 text-slate-500 shadow-sm">
@@ -94,7 +94,7 @@ function UserProfileCard() {
 
 function Sidebar() {
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white lg:min-h-screen lg:w-[280px] lg:border-b-0 lg:border-r">
+    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white lg:min-h-screen lg:w-[300px] lg:border-b-0 lg:border-r">
       <div className="border-b border-slate-200 px-6 py-7">
         <Link to="/" className="flex items-center gap-4">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 via-white to-lime-100 shadow-sm ring-1 ring-slate-200">
@@ -121,18 +121,26 @@ function Sidebar() {
 
             return (
               <li key={item.label}>
-                <div
-                  className={`flex items-center gap-4 rounded-3xl px-4 py-3 ${
-                    item.active
-                      ? 'bg-lime-400 text-white shadow-[0_16px_30px_-18px_rgba(132,204,22,0.9)]'
-                      : 'text-slate-700'
-                  }`}
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 rounded-3xl px-4 py-3 transition ${
+                      isActive
+                        ? 'bg-lime-400 text-white shadow-[0_16px_30px_-18px_rgba(132,204,22,0.9)]'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    }`
+                  }
                 >
-                  <SidebarIconShell active={item.active}>
-                    <Icon />
-                  </SidebarIconShell>
-                  <span className="text-lg font-medium">{item.label}</span>
-                </div>
+                  {({ isActive }) => (
+                    <>
+                      <SidebarIconShell active={isActive}>
+                        <Icon />
+                      </SidebarIconShell>
+                      <span className="text-lg font-medium">{item.label}</span>
+                    </>
+                  )}
+                </NavLink>
               </li>
             );
           })}
