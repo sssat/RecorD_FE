@@ -80,7 +80,7 @@ function DialogShell({ maxWidth = 'max-w-[640px]', onClose, children }) {
     >
       <div className="flex min-h-full items-start justify-center sm:items-center">
         <div
-          className={`w-full ${maxWidth} overflow-hidden rounded-[36px] bg-white shadow-[0_35px_90px_-35px_rgba(15,23,42,0.45)]`}
+          className={`dialog-surface w-full ${maxWidth} overflow-hidden rounded-[36px] bg-white shadow-[0_35px_90px_-35px_rgba(15,23,42,0.45)]`}
         >
           {children}
         </div>
@@ -108,7 +108,7 @@ function FormLayout({ title, onClose, footer, children }) {
       <div className="overflow-y-auto px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
         {children}
       </div>
-      <div className="border-t border-slate-100 px-6 py-5 sm:px-8">{footer}</div>
+      <div className="dialog-footer border-t border-slate-100 px-6 py-5 sm:px-8">{footer}</div>
     </div>
   );
 }
@@ -129,7 +129,7 @@ function FieldInput(props) {
   return (
     <input
       {...props}
-      className="w-full rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 text-lg text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#AFE077] focus:bg-white"
+      className="dialog-field-input w-full rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 text-lg text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#767676] focus:bg-white"
     />
   );
 }
@@ -138,7 +138,7 @@ function FieldTextarea(props) {
   return (
     <textarea
       {...props}
-      className="min-h-[138px] w-full rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 text-lg text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#AFE077] focus:bg-white"
+      className="dialog-field-input min-h-[138px] w-full rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 text-lg text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#767676] focus:bg-white"
     />
   );
 }
@@ -169,9 +169,9 @@ function FieldSelect({ value, options, onChange, placeholder }) {
       <button
         type="button"
         onClick={() => setIsOpen((currentState) => !currentState)}
-        className={`flex w-full items-center justify-between rounded-[28px] border px-6 py-5 text-left text-lg text-slate-900 transition ${
+        className={`dialog-field-select-trigger flex w-full items-center justify-between rounded-[28px] border px-6 py-5 text-left text-lg text-slate-900 transition ${
           isOpen
-            ? 'border-[#AFE077] bg-white shadow-[0_20px_40px_-30px_rgba(149,211,79,0.5)]'
+            ? 'border-[#767676] bg-white shadow-[0_20px_40px_-30px_rgba(58,58,58,0.35)]'
             : 'border-slate-100 bg-[#f7f8fc] hover:border-slate-200'
         }`}
       >
@@ -182,7 +182,7 @@ function FieldSelect({ value, options, onChange, placeholder }) {
       </button>
 
       {isOpen ? (
-        <div className="absolute z-30 mt-3 w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white p-2 shadow-[0_25px_60px_-30px_rgba(15,23,42,0.35)]">
+        <div className="dialog-field-select-menu absolute z-30 mt-3 w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white p-2 shadow-[0_25px_60px_-30px_rgba(15,23,42,0.35)]">
           <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
             {options.map((option) => {
               const isSelected = option.value === value;
@@ -197,13 +197,13 @@ function FieldSelect({ value, options, onChange, placeholder }) {
                   }}
                   className={`flex w-full items-center justify-between rounded-[22px] px-4 py-3 text-left text-lg transition ${
                     isSelected
-                      ? 'bg-[#EEF7E0] text-slate-900'
+                      ? 'bg-[#EFEFEF] text-slate-900'
                       : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <span>{option.label}</span>
                   {isSelected ? (
-                    <span className="text-[#6FA839]">
+                    <span className="text-[#3A3A3A]">
                       <CheckIcon />
                     </span>
                   ) : null}
@@ -261,7 +261,7 @@ function SecondaryButton({ children, ...props }) {
   return (
     <button
       {...props}
-      className="flex-1 rounded-[26px] border border-slate-200 px-5 py-4 text-xl font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+      className="dialog-secondary-button flex-1 rounded-[26px] border border-slate-200 px-5 py-4 text-xl font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
     >
       {children}
     </button>
@@ -272,12 +272,12 @@ function PrimaryButton({ children, tone = 'primary', ...props }) {
   const toneClassName =
     tone === 'danger'
       ? 'bg-white text-[#CC3F41] ring-1 ring-[#FFC1C1] hover:bg-[#FFE0E0]'
-      : 'bg-[#95D34F] text-white hover:bg-[#6FA839]';
+      : 'bg-[#3A3A3A] text-white hover:bg-[#000000]';
 
   return (
     <button
       {...props}
-      className={`flex-1 rounded-[26px] px-5 py-4 text-xl font-medium transition ${toneClassName}`}
+      className={`dialog-primary-button flex-1 rounded-[26px] px-5 py-4 text-xl font-medium transition ${toneClassName}`}
     >
       {children}
     </button>

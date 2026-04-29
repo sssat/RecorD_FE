@@ -3,7 +3,7 @@ import KakaoButton from '../../components/KakaoButton/KakaoButton';
 
 function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f7fb] px-4 py-10">
+    <div className="app-login-shell flex min-h-screen items-center justify-center bg-[#f5f7fb] px-4 py-10">
       <div className="w-full max-w-md rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_24px_50px_-30px_rgba(15,23,42,0.25)]">
         <Link
           to="/"

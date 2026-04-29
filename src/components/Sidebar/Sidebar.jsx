@@ -11,7 +11,7 @@ function SidebarIconShell({ children, active }) {
   return (
     <span
       className={`flex h-10 w-10 items-center justify-center rounded-2xl transition ${
-        active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+        active ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
       }`}
     >
       {children}
@@ -74,16 +74,14 @@ function UserProfileCard() {
   return (
     <Link
       to="/login"
-      className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-lime-300 hover:bg-lime-50"
+      className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-[#767676] hover:bg-white"
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lime-400 text-lg font-semibold text-white">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#3A3A3A] text-lg font-semibold text-white">
         K
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-base font-semibold text-slate-900">로그인 해주세요</p>
-        <p className="truncate text-sm text-slate-500">
-          카카오 로그인 페이지로 이동합니다
-        </p>
+        <p className="truncate text-sm text-slate-500">카카오 로그인 페이지로 이동합니다</p>
       </div>
       <span className="rounded-full bg-white p-2 text-slate-500 shadow-sm">
         <GearIcon />
@@ -97,8 +95,8 @@ function Sidebar() {
     <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white lg:h-screen lg:w-[300px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
       <div className="border-b border-slate-200 px-6 py-7">
         <Link to="/" className="flex items-center gap-4">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 via-white to-lime-100 shadow-sm ring-1 ring-slate-200">
-            <svg viewBox="0 0 24 24" className="h-7 w-7 fill-none stroke-[#24406f] stroke-[1.8]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 via-white to-slate-200 shadow-sm ring-1 ring-slate-200">
+            <svg viewBox="0 0 24 24" className="h-7 w-7 fill-none stroke-[#1f2937] stroke-[1.8]">
               <path d="M4 17.5V8.25" />
               <path d="M8 17.5V11" />
               <path d="M12 17.5V6.5" />
@@ -127,8 +125,8 @@ function Sidebar() {
                   className={({ isActive }) =>
                     `flex items-center gap-4 rounded-3xl px-4 py-3 transition ${
                       isActive
-                        ? 'bg-lime-400 text-white shadow-[0_16px_30px_-18px_rgba(132,204,22,0.9)]'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'bg-[#3A3A3A] text-white shadow-[0_16px_30px_-18px_rgba(58,58,58,0.42)]'
+                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                     }`
                   }
                 >

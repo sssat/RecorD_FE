@@ -88,8 +88,8 @@ function CheckCircleIcon({ completed = false }) {
 function ActionButton({ children, tone = "primary", ...props }) {
   const toneClassName =
     tone === "secondary"
-      ? "bg-[#3CC4AD] text-white shadow-[0_18px_35px_-22px_rgba(60,196,173,0.95)] hover:bg-[#2D9A87]"
-      : "bg-[#95D34F] text-white shadow-[0_18px_35px_-22px_rgba(149,211,79,0.95)] hover:bg-[#6FA839]";
+      ? "bg-[#767676] text-white shadow-[0_18px_35px_-22px_rgba(118,118,118,0.55)] hover:bg-[#565656]"
+      : "bg-[#3A3A3A] text-white shadow-[0_18px_35px_-22px_rgba(58,58,58,0.55)] hover:bg-[#000000]";
 
   return (
     <button
@@ -494,7 +494,7 @@ function CalendarPage() {
 
   return (
     <>
-      <section className="space-y-6">
+      <section className="calendar-page space-y-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-slate-900">
@@ -529,14 +529,14 @@ function CalendarPage() {
                 <button
                   type="button"
                   onClick={goToToday}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 transition hover:border-[#95D34F] hover:text-slate-900"
+                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 transition hover:border-[#767676] hover:text-slate-900"
                 >
                   오늘
                 </button>
                 <button
                   type="button"
                   onClick={() => changeMonth(-1)}
-                  className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-[#95D34F] hover:text-slate-900"
+                  className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-[#767676] hover:text-slate-900"
                   aria-label="이전 달"
                 >
                   <ChevronLeftIcon />
@@ -544,7 +544,7 @@ function CalendarPage() {
                 <button
                   type="button"
                   onClick={() => changeMonth(1)}
-                  className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-[#95D34F] hover:text-slate-900"
+                  className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-[#767676] hover:text-slate-900"
                   aria-label="다음 달"
                 >
                   <ChevronRightIcon />
@@ -601,7 +601,7 @@ function CalendarPage() {
                         isCurrentMonth ? "" : "bg-slate-50/70 text-slate-300"
                       } ${
                         isSelected
-                          ? "ring-2 ring-inset ring-[#6DD9C7]"
+                          ? "ring-2 ring-inset ring-[#767676]"
                           : "hover:bg-slate-50"
                       }`}
                     >
@@ -609,9 +609,9 @@ function CalendarPage() {
                         <span
                           className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
                             isSelected
-                              ? "bg-[#3CC4AD] text-white"
+                              ? "bg-[#3A3A3A] text-white"
                               : isToday
-                                ? "bg-[#95D34F] text-white"
+                                ? "bg-[#767676] text-white"
                                 : isCurrentMonth
                                   ? "text-slate-700"
                                   : "text-slate-300"
@@ -756,7 +756,7 @@ function CalendarPage() {
                       <button
                         type="button"
                         onClick={() => toggleTodoCompletion(todo.id)}
-                        className="mt-1 text-slate-400 transition hover:text-[#3CC4AD]"
+                        className="mt-1 text-slate-400 transition hover:text-[#565656]"
                         aria-label="할 일 완료 처리"
                       >
                         <CheckCircleIcon />
@@ -818,7 +818,7 @@ function CalendarPage() {
                         <button
                           type="button"
                           onClick={() => toggleTodoCompletion(todo.id)}
-                          className="mt-1 text-[#3CC4AD] transition hover:text-[#2D9A87]"
+                          className="mt-1 text-[#565656] transition hover:text-[#3A3A3A]"
                           aria-label="완료 해제"
                         >
                           <CheckCircleIcon completed />
