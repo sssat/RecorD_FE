@@ -7,11 +7,15 @@ import {
   TODO_PRIORITY_OPTIONS,
   formatEventFullDateLabel,
   formatEventTimeRange,
+  hasEventTime,
 } from './calendarData';
 
 function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[2]">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-6 w-6 fill-none stroke-current stroke-[2]"
+    >
       <path d="m6 6 12 12" />
       <path d="M18 6 6 18" />
     </svg>
@@ -20,7 +24,10 @@ function CloseIcon() {
 
 function CalendarIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.8]">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-6 w-6 fill-none stroke-current stroke-[1.8]"
+    >
       <rect x="3.75" y="5.75" width="16.5" height="14.5" rx="2.5" />
       <path d="M8 3.75v4" />
       <path d="M16 3.75v4" />
@@ -31,7 +38,10 @@ function CalendarIcon() {
 
 function ClockIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.8]">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-6 w-6 fill-none stroke-current stroke-[1.8]"
+    >
       <circle cx="12" cy="12" r="8.25" />
       <path d="M12 7.5v5l3.5 2" />
     </svg>
@@ -40,7 +50,10 @@ function ClockIcon() {
 
 function MapPinIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current stroke-[1.8]">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-6 w-6 fill-none stroke-current stroke-[1.8]"
+    >
       <path d="M12 21s6-4.4 6-10a6 6 0 1 0-12 0c0 5.6 6 10 6 10Z" />
       <circle cx="12" cy="11" r="2.2" />
     </svg>
@@ -49,7 +62,10 @@ function MapPinIcon() {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[2.4]">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4 fill-none stroke-current stroke-[2.4]"
+    >
       <path d="m5 12 4 4 10-10" />
     </svg>
   );
@@ -108,20 +124,22 @@ function FormLayout({ title, onClose, footer, children }) {
       <div className="overflow-y-auto px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
         {children}
       </div>
-      <div className="dialog-footer border-t border-slate-100 px-6 py-5 sm:px-8">{footer}</div>
+      <div className="dialog-footer border-t border-slate-100 px-6 py-5 sm:px-8">
+        {footer}
+      </div>
     </div>
   );
 }
 
 function FormField({ label, optional = false, children }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="mb-3 block text-base font-medium text-slate-900">
         {label}
         {optional ? ' (선택)' : ''}
       </span>
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -140,6 +158,62 @@ function FieldTextarea(props) {
       {...props}
       className="dialog-field-input min-h-[138px] w-full rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 text-lg text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-[#767676] focus:bg-white"
     />
+  );
+}
+
+function openNativePicker(input) {
+  if (!input) {
+    return;
+  }
+
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker();
+      return;
+    } catch {
+      // Fallback to focus when showPicker is unavailable.
+    }
+  }
+
+  input.focus();
+}
+
+function PickerField({ type, ariaLabel, ...props }) {
+  const inputRef = useRef(null);
+  const icon = type === 'time' ? <ClockIcon /> : <CalendarIcon />;
+
+  return (
+    <div className="flex items-center gap-3 rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 transition focus-within:border-[#767676] focus-within:bg-white">
+      <input
+        ref={inputRef}
+        type={type}
+        {...props}
+        className="picker-field-input w-full bg-transparent text-lg text-slate-900 outline-none"
+      />
+      <button
+        type="button"
+        onClick={() => openNativePicker(inputRef.current)}
+        className="shrink-0 text-slate-500 transition hover:text-slate-900"
+        aria-label={ariaLabel}
+      >
+        {icon}
+      </button>
+    </div>
+  );
+}
+
+function TimePickerField({ label, value, onChange, ariaLabel }) {
+  return (
+    <div className="space-y-2">
+      <span className="text-sm font-semibold text-slate-400">{label}</span>
+      <PickerField
+        type="time"
+        step="300"
+        value={value}
+        onChange={onChange}
+        ariaLabel={ariaLabel}
+      />
+    </div>
   );
 }
 
@@ -333,7 +407,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldInput
               value={formState.title}
               onChange={(event) => setFieldValue('title', event.target.value)}
-              placeholder="할 일을 입력하세요"
+              placeholder="할 일을 입력해 주세요"
             />
           </FormField>
 
@@ -342,23 +416,26 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
               value={formState.priority}
               options={TODO_PRIORITY_OPTIONS}
               onChange={(nextValue) => setFieldValue('priority', nextValue)}
-              placeholder="우선순위를 선택하세요"
+              placeholder="우선순위를 선택해 주세요"
             />
           </FormField>
 
           <FormField label="마감일" optional>
-            <FieldInput
+            <PickerField
               type="date"
               value={formState.date}
               onChange={(event) => setFieldValue('date', event.target.value)}
+              ariaLabel="마감일 선택"
             />
           </FormField>
 
           <FormField label="설명" optional>
             <FieldTextarea
               value={formState.description}
-              onChange={(event) => setFieldValue('description', event.target.value)}
-              placeholder="할 일에 대한 설명을 입력하세요"
+              onChange={(event) =>
+                setFieldValue('description', event.target.value)
+              }
+              placeholder="할 일에 대한 설명을 입력해 주세요"
             />
           </FormField>
 
@@ -367,7 +444,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
               value={formState.project}
               options={PROJECT_OPTIONS.map(toProjectOption)}
               onChange={(nextValue) => setFieldValue('project', nextValue)}
-              placeholder="프로젝트를 선택하세요"
+              placeholder="프로젝트를 선택해 주세요"
             />
           </FormField>
         </form>
@@ -380,9 +457,37 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
   const [formState, setFormState] = useState(initialValues);
 
   const setFieldValue = (fieldName, nextValue) => {
+    setFormState((currentState) => {
+      const nextState = {
+        ...currentState,
+        [fieldName]: nextValue,
+      };
+
+      if (
+        fieldName === 'startDate' &&
+        currentState.endDate &&
+        currentState.endDate < nextValue
+      ) {
+        nextState.endDate = nextValue;
+      }
+
+      if (
+        fieldName === 'endDate' &&
+        currentState.startDate &&
+        nextValue &&
+        nextValue < currentState.startDate
+      ) {
+        nextState.endDate = currentState.startDate;
+      }
+
+      return nextState;
+    });
+  };
+
+  const toggleTime = () => {
     setFormState((currentState) => ({
       ...currentState,
-      [fieldName]: nextValue,
+      hasTime: !currentState.hasTime,
     }));
   };
 
@@ -391,9 +496,10 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
 
     if (
       !formState.title.trim() ||
-      !formState.date ||
-      !formState.startTime ||
-      !formState.endTime
+      !formState.startDate ||
+      !formState.endDate ||
+      (formState.hasTime &&
+        (!formState.startTime || !formState.endTime))
     ) {
       return;
     }
@@ -431,38 +537,83 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
             />
           </FormField>
 
-          <FormField label="날짜">
-            <FieldInput
-              type="date"
-              value={formState.date}
-              onChange={(event) => setFieldValue('date', event.target.value)}
-            />
-          </FormField>
-
           <div className="grid gap-6 sm:grid-cols-2">
-            <FormField label="시작 시간">
-              <FieldInput
-                type="time"
-                value={formState.startTime}
-                onChange={(event) => setFieldValue('startTime', event.target.value)}
+            <FormField label="시작일">
+              <PickerField
+                type="date"
+                value={formState.startDate}
+                onChange={(event) =>
+                  setFieldValue('startDate', event.target.value)
+                }
+                ariaLabel="시작일 선택"
               />
             </FormField>
 
-            <FormField label="종료 시간">
-              <FieldInput
-                type="time"
-                value={formState.endTime}
-                onChange={(event) => setFieldValue('endTime', event.target.value)}
+            <FormField label="종료일">
+              <PickerField
+                type="date"
+                min={formState.startDate || undefined}
+                value={formState.endDate}
+                onChange={(event) =>
+                  setFieldValue('endDate', event.target.value)
+                }
+                ariaLabel="종료일 선택"
               />
             </FormField>
           </div>
+
+          <FormField label="시간" optional>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-[24px] border border-slate-100 bg-[#f7f8fc] px-5 py-4">
+                <span className="text-base font-semibold text-slate-900">
+                  시간 사용
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formState.hasTime}
+                  onClick={toggleTime}
+                  className={`relative h-8 w-14 rounded-full transition ${
+                    formState.hasTime ? 'bg-[#3A3A3A]' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 h-6 w-6 rounded-full bg-white transition ${
+                      formState.hasTime ? 'left-7' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {formState.hasTime ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <TimePickerField
+                    label="시작 시간"
+                    value={formState.startTime}
+                    onChange={(event) =>
+                      setFieldValue('startTime', event.target.value)
+                    }
+                    ariaLabel="시작 시간 입력"
+                  />
+                  <TimePickerField
+                    label="종료 시간"
+                    value={formState.endTime}
+                    onChange={(event) =>
+                      setFieldValue('endTime', event.target.value)
+                    }
+                    ariaLabel="종료 시간 입력"
+                  />
+                </div>
+              ) : null}
+            </div>
+          </FormField>
 
           <FormField label="유형">
             <FieldSelect
               value={formState.type}
               options={EVENT_TYPE_OPTIONS}
               onChange={(nextValue) => setFieldValue('type', nextValue)}
-              placeholder="일정 유형을 선택하세요"
+              placeholder="일정 유형을 선택해 주세요"
             />
           </FormField>
 
@@ -477,15 +628,17 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldInput
               value={formState.location}
               onChange={(event) => setFieldValue('location', event.target.value)}
-              placeholder="장소를 입력하세요"
+              placeholder="장소를 입력해 주세요"
             />
           </FormField>
 
           <FormField label="설명" optional>
             <FieldTextarea
               value={formState.description}
-              onChange={(event) => setFieldValue('description', event.target.value)}
-              placeholder="일정에 대한 설명을 입력하세요"
+              onChange={(event) =>
+                setFieldValue('description', event.target.value)
+              }
+              placeholder="일정에 대한 설명을 입력해 주세요"
             />
           </FormField>
 
@@ -494,7 +647,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
               value={formState.project}
               options={PROJECT_OPTIONS.map(toProjectOption)}
               onChange={(nextValue) => setFieldValue('project', nextValue)}
-              placeholder="프로젝트를 선택하세요"
+              placeholder="프로젝트를 선택해 주세요"
             />
           </FormField>
         </form>
@@ -534,12 +687,14 @@ export function EventDetailDialog({ event, onClose, onDelete, onEdit }) {
             <p>{formatEventFullDateLabel(event)}</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400">
-              <ClockIcon />
-            </span>
-            <p>{formatEventTimeRange(event.start, event.end)}</p>
-          </div>
+          {hasEventTime(event) ? (
+            <div className="flex items-center gap-4">
+              <span className="text-slate-400">
+                <ClockIcon />
+              </span>
+              <p>{formatEventTimeRange(event.start, event.end)}</p>
+            </div>
+          ) : null}
 
           {event.location ? (
             <div className="flex items-center gap-4">
@@ -552,11 +707,17 @@ export function EventDetailDialog({ event, onClose, onDelete, onEdit }) {
         </div>
 
         {event.description ? (
-          <p className="mt-8 text-xl leading-8 text-slate-400">{event.description}</p>
+          <p className="mt-8 text-xl leading-8 text-slate-400">
+            {event.description}
+          </p>
         ) : null}
 
         <div className="mt-8 flex gap-4">
-          <PrimaryButton type="button" tone="danger" onClick={() => onDelete(event.id)}>
+          <PrimaryButton
+            type="button"
+            tone="danger"
+            onClick={() => onDelete(event.id)}
+          >
             삭제
           </PrimaryButton>
           <PrimaryButton type="button" onClick={() => onEdit(event)}>

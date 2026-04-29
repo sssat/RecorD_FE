@@ -14,4 +14,14 @@
     background-color: #f5f7fb;
     color: #0f172a;
   }
+
+  .picker-field-input::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
+
+  .picker-field-input::-webkit-clear-button,
+  .picker-field-input::-webkit-inner-spin-button {
+    display: none;
+  }
 }

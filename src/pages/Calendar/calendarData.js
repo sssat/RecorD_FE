@@ -157,7 +157,7 @@ export function toTimeInputValue(date) {
 
 export function combineDateAndTime(dateValue, timeValue) {
   const [year, month, day] = dateValue.split('-').map(Number);
-  const [hours, minutes] = timeValue.split(':').map(Number);
+  const [hours, minutes] = (timeValue || '00:00').split(':').map(Number);
 
   return new Date(year, month - 1, day, hours, minutes);
 }
@@ -179,6 +179,10 @@ export function isWithinRange(date, startDate, endDate) {
 
 export function getEventColorByType(type) {
   return EVENT_COLOR_BY_TYPE[type] ?? 'primary';
+}
+
+export function hasEventTime(event) {
+  return event?.hasTime !== false;
 }
 
 export function getTodoPriorityLabel(priority) {
@@ -222,6 +226,16 @@ export function formatEventTimeRange(startDate, endDate) {
 }
 
 export function formatEventDateRange(event) {
+  if (!hasEventTime(event)) {
+    if (isSameDay(event.start, event.end)) {
+      return formatCompactDate(event.start);
+    }
+
+    return `${formatCompactDate(event.start)} - ${formatCompactDate(
+      event.end
+    )}`;
+  }
+
   if (isSameDay(event.start, event.end)) {
     return `${formatCompactDate(event.start)} · ${formatEventTimeRange(
       event.start,

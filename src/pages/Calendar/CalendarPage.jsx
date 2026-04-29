@@ -178,11 +178,15 @@ function buildTodoFormInitialValues(selectedDate, todo) {
 
 function buildEventFormInitialValues(selectedDate, event) {
   if (event) {
+    const hasTime = event.hasTime !== false;
+
     return {
       title: event.title,
-      date: toInputDateValue(event.start),
-      startTime: toTimeInputValue(event.start),
-      endTime: toTimeInputValue(event.end),
+      startDate: toInputDateValue(event.start),
+      endDate: toInputDateValue(event.end),
+      startTime: hasTime ? toTimeInputValue(event.start) : "09:00",
+      endTime: hasTime ? toTimeInputValue(event.end) : "10:00",
+      hasTime,
       type: event.type,
       color: event.color,
       location: event.location ?? "",
@@ -193,9 +197,11 @@ function buildEventFormInitialValues(selectedDate, event) {
 
   return {
     title: "",
-    date: toInputDateValue(selectedDate),
+    startDate: toInputDateValue(selectedDate),
+    endDate: toInputDateValue(selectedDate),
     startTime: "14:00",
     endTime: "15:00",
+    hasTime: false,
     type: "meeting",
     color: getEventColorByType("meeting"),
     location: "",
@@ -410,13 +416,26 @@ function CalendarPage() {
 
   const handleSubmitEvent = (formValues) => {
     setCalendarState((currentState) => {
+      const startDateValue = formValues.startDate || toInputDateValue(selectedDate);
+      const endDateValue =
+        formValues.endDate && formValues.endDate >= startDateValue
+          ? formValues.endDate
+          : startDateValue;
+      const hasTime = formValues.hasTime !== false;
       const startDate = combineDateAndTime(
-        formValues.date,
-        formValues.startTime,
+        startDateValue,
+        hasTime ? formValues.startTime : "00:00",
       );
-      let endDate = combineDateAndTime(formValues.date, formValues.endTime);
+      let endDate = combineDateAndTime(
+        endDateValue,
+        hasTime ? formValues.endTime : "00:00",
+      );
 
-      if (endDate.getTime() <= startDate.getTime()) {
+      if (
+        hasTime &&
+        endDateValue === startDateValue &&
+        endDate.getTime() <= startDate.getTime()
+      ) {
         endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
       }
 
@@ -430,6 +449,7 @@ function CalendarPage() {
                   title: formValues.title,
                   start: startDate,
                   end: endDate,
+                  hasTime,
                   type: formValues.type,
                   color: formValues.color,
                   location: formValues.location,
@@ -450,6 +470,7 @@ function CalendarPage() {
             title: formValues.title,
             start: startDate,
             end: endDate,
+            hasTime,
             type: formValues.type,
             color: formValues.color,
             location: formValues.location,
