@@ -694,15 +694,21 @@ function CreateNoteChooserDialog({
   onOpenManualCreate,
 }) {
   return (
-    <ModalShell title="새 회의록 작성" onClose={onClose}>
+    <ModalShell
+      title="새 회의록 작성"
+      onClose={onClose}
+      size="md"
+      panelClassName="rounded-[20px]"
+    >
       <div className="space-y-5">
         <VoiceUploader
           fileName=""
           onSelectFile={onSelectFile}
           disabled={isProcessing}
+          className="rounded-[20px]"
         />
 
-        <HelperBanner>
+        <HelperBanner className="rounded-[18px]">
           업로드된 녹음 파일은 자동으로 텍스트로 변환되고, AI가 회의 내용을
           분석하여 요약과 주요 체크리스트까지 정리해드립니다.
         </HelperBanner>
