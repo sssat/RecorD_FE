@@ -272,7 +272,7 @@ function buildMeetingDownloadText(meetingNote) {
     "[주요 논의 사항]",
     ...meetingNote.keyPoints.map((item, index) => `${index + 1}. ${item}`),
     "",
-    "[액션 아이템]",
+    "[체크리스트]",
     ...meetingNote.actionItems.map((item) => `- ${item}`),
     "",
     "[회의 내용]",
@@ -630,7 +630,7 @@ function UploadDialog({
 
         <HelperBanner>
           업로드된 녹음 파일은 자동으로 텍스트로 변환되고 AI가 회의 내용을
-          분석하여 요약, 주요 논의 사항, 액션 아이템을 추출해드립니다.
+          분석하여 요약, 주요 논의 사항, 체크리스트를 추출해드립니다.
         </HelperBanner>
 
         {error ? (
@@ -674,7 +674,7 @@ function CreateNoteChooserDialog({
 
         <HelperBanner>
           업로드된 녹음 파일은 자동으로 텍스트로 변환되고, AI가 회의 내용을
-          분석하여 요약과 주요 액션 아이템까지 정리해드립니다.
+          분석하여 요약과 주요 체크리스트까지 정리해드립니다.
         </HelperBanner>
 
         <div className="flex items-center gap-4">

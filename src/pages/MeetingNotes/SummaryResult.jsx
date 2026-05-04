@@ -102,7 +102,7 @@ function SummaryResult({
 
           <div>
             <label className="mb-3 block text-sm font-semibold text-slate-800">
-              액션 아이템
+              체크리스트
             </label>
             <div className="space-y-3 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
               {editableActionItems.length > 0 ? (
@@ -130,7 +130,7 @@ function SummaryResult({
                       type="button"
                       onClick={() => onRemoveActionItem?.(index)}
                       className="rounded-full p-2 text-slate-300 transition hover:bg-slate-50 hover:text-slate-500"
-                      aria-label="액션 아이템 삭제"
+                      aria-label="체크리스트 삭제"
                     >
                       <MinusIcon />
                     </button>
@@ -138,7 +138,7 @@ function SummaryResult({
                 ))
               ) : (
                 <div className="rounded-[18px] border border-dashed border-slate-200 bg-white px-4 py-4 text-sm text-slate-400">
-                  액션 아이템을 추가해 주세요.
+                  체크리스트를 추가해 주세요.
                 </div>
               )}
 
@@ -148,7 +148,7 @@ function SummaryResult({
                 className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-[#67b6a7] hover:text-[#2b7a6c]"
               >
                 <PlusIcon />
-                액션 아이템 추가
+                체크리스트 추가
               </button>
             </div>
           </div>
@@ -195,7 +195,7 @@ function SummaryResult({
 
       <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-[1.85rem] font-black tracking-tight text-slate-900">
-          액션 아이템
+          체크리스트
         </h2>
 
         {actionItemList.length > 0 ? (
@@ -226,7 +226,7 @@ function SummaryResult({
           </div>
         ) : (
           <p className="mt-5 rounded-[20px] bg-slate-50 px-5 py-5 text-slate-400">
-            저장된 액션 아이템이 없습니다.
+            저장된 체크리스트가 없습니다.
           </p>
         )}
       </section>
