@@ -1463,6 +1463,7 @@ function ProjectPage() {
           <PortfolioResult
             projectName={selectedProject.name}
             portfolio={selectedPortfolio}
+            accentColor={getProjectTheme(selectedProject.colorKey).accent}
             onBack={() => {
               setSelectedPortfolioId(null);
               setActiveTab('portfolios');

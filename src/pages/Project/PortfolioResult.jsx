@@ -177,6 +177,7 @@ function renderSectionBody(sectionKey, value) {
 function PortfolioResult({
   projectName,
   portfolio,
+  accentColor = '#a8d45f',
   onBack,
   onEdit,
   onDelete,
@@ -195,22 +196,27 @@ function PortfolioResult({
             포트폴리오 목록으로
           </button>
 
-          <div className="mt-7 flex items-start gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-[#a8d45f] text-white shadow-[0_18px_30px_-24px_rgba(168,212,95,0.8)]">
-              <span className="scale-90">
-                <StarSparkleIcon />
+          <div className="mt-7">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:text-[0.78rem]">
+              {projectName}
+            </p>
+            <div className="mt-2.5 flex items-center gap-4">
+              <span
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] text-white shadow-[0_18px_30px_-24px_rgba(15,23,42,0.28)]"
+                style={{ backgroundColor: accentColor }}
+              >
+                <span className="scale-90">
+                  <StarSparkleIcon />
+                </span>
               </span>
-            </span>
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:text-[0.78rem]">
-                {projectName}
-              </p>
-              <h2 className="mt-2.5 text-[2.1rem] font-black tracking-tight text-slate-900 sm:text-[2.55rem]">
-                {portfolio.title}
-              </h2>
-              <p className="mt-2 text-base text-slate-400 sm:text-[1.05rem]">
-                작성일: {formatCompactKoreanDate(portfolio.createdAt)}
-              </p>
+              <div>
+                <h2 className="text-[2.1rem] font-black tracking-tight text-slate-900 sm:text-[2.55rem]">
+                  {portfolio.title}
+                </h2>
+                <p className="mt-2 text-base text-slate-400 sm:text-[1.05rem]">
+                  작성일: {formatCompactKoreanDate(portfolio.createdAt)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
