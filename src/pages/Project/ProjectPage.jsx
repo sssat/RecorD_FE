@@ -187,6 +187,32 @@ function getProjectTheme(colorKey) {
   return PROJECT_COLOR_THEMES[colorKey] ?? PROJECT_COLOR_THEMES.green;
 }
 
+function hexToRgb(hexColor) {
+  const normalizedColor = hexColor.replace('#', '');
+  const safeColor =
+    normalizedColor.length === 3
+      ? normalizedColor
+          .split('')
+          .map((character) => `${character}${character}`)
+          .join('')
+      : normalizedColor;
+  const parsedValue = Number.parseInt(safeColor, 16);
+
+  return {
+    red: (parsedValue >> 16) & 255,
+    green: (parsedValue >> 8) & 255,
+    blue: parsedValue & 255,
+  };
+}
+
+function mixColorWithWhite(hexColor, whiteRatio) {
+  const { red, green, blue } = hexToRgb(hexColor);
+  const blendChannel = (channel) =>
+    Math.round(channel + (255 - channel) * whiteRatio);
+
+  return `rgb(${blendChannel(red)} ${blendChannel(green)} ${blendChannel(blue)})`;
+}
+
 function getRelatedMeetingNotes(project, workspace) {
   const noteIdSet = new Set(project.meetingIds);
   return workspace.meetingNotes.filter((meetingNote) => noteIdSet.has(meetingNote.id));
@@ -351,14 +377,25 @@ function ProjectCard({ project, metrics, onSelect }) {
   );
 }
 
-function InfoMetricCard({ label, value, subtleValue }) {
+function InfoMetricCard({ label, value, subtleValue, theme }) {
+  const surfaceTopColor = mixColorWithWhite(theme.accent, 0.28);
+  const surfaceBottomColor = mixColorWithWhite(theme.accent, 0.2);
+
   return (
-    <div className="rounded-[24px] bg-white/14 px-6 py-6 backdrop-blur-[2px]">
-      <p className="text-lg text-white/75">{label}</p>
-      <p className="mt-4 text-5xl font-black tracking-tight text-white">
+    <div
+      className="rounded-[26px] border px-7 py-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_35px_-30px_rgba(91,122,26,0.26)]"
+      style={{
+        background: `linear-gradient(180deg, ${surfaceTopColor} 0%, ${surfaceBottomColor} 100%)`,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+      }}
+    >
+      <p className="text-lg font-medium text-white/80">{label}</p>
+      <p className="mt-5 text-5xl font-black tracking-tight text-white">
         {value}
       </p>
-      {subtleValue ? <p className="mt-2 text-sm text-white/75">{subtleValue}</p> : null}
+      {subtleValue ? (
+        <p className="mt-3 text-sm text-white/75">{subtleValue}</p>
+      ) : null}
     </div>
   );
 }
@@ -1368,14 +1405,17 @@ function ProjectPage() {
               <InfoMetricCard
                 label="회의록"
                 value={getProjectMetrics(selectedProject, workspace).meetingCount}
+                theme={getProjectTheme(selectedProject.colorKey)}
               />
               <InfoMetricCard
                 label="할일"
                 value={`${getProjectMetrics(selectedProject, workspace).completedTodoCount}/${getProjectMetrics(selectedProject, workspace).todoCount}`}
+                theme={getProjectTheme(selectedProject.colorKey)}
               />
               <InfoMetricCard
                 label="포트폴리오"
                 value={getProjectMetrics(selectedProject, workspace).portfolioCount}
+                theme={getProjectTheme(selectedProject.colorKey)}
               />
             </div>
           </div>
