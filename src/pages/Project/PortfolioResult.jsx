@@ -145,9 +145,9 @@ function ActionButton({ children, tone = 'default', onClick }) {
   const className =
     tone === 'danger'
       ? 'border-rose-300 text-rose-500 hover:border-rose-400 hover:bg-rose-50'
-      : tone === 'primary'
-        ? 'border-[#7da5ee] bg-[#7da5ee] text-white hover:brightness-95'
-        : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50';
+      : tone === 'dark'
+        ? 'border-[#454545] bg-[#454545] text-white hover:bg-[#363636]'
+      : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50';
 
   return (
     <button
@@ -163,7 +163,7 @@ function ActionButton({ children, tone = 'default', onClick }) {
 function renderSectionBody(sectionKey, value) {
   if (sectionKey === 'action' && Array.isArray(value)) {
     return (
-      <ol className="space-y-3 text-lg leading-9 text-slate-700">
+      <ol className="space-y-2.5 text-[1.05rem] leading-8 text-slate-700">
         {value.map((item, index) => (
           <li key={item}>{`${index + 1}) ${item}`}</li>
         ))}
@@ -171,7 +171,7 @@ function renderSectionBody(sectionKey, value) {
     );
   }
 
-  return <p className="text-lg leading-9 text-slate-700">{value}</p>;
+  return <p className="text-[1.05rem] leading-8 text-slate-700">{value}</p>;
 }
 
 function PortfolioResult({
@@ -183,7 +183,7 @@ function PortfolioResult({
   onExport,
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <button
@@ -195,18 +195,20 @@ function PortfolioResult({
             포트폴리오 목록으로
           </button>
 
-          <div className="mt-8 flex items-start gap-5">
-            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[28px] bg-[#a8d45f] text-white shadow-[0_20px_35px_-24px_rgba(168,212,95,0.8)]">
-              <StarSparkleIcon />
+          <div className="mt-7 flex items-start gap-4">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] bg-[#a8d45f] text-white shadow-[0_18px_30px_-24px_rgba(168,212,95,0.8)]">
+              <span className="scale-90">
+                <StarSparkleIcon />
+              </span>
             </span>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:text-[0.78rem]">
                 {projectName}
               </p>
-              <h2 className="mt-3 text-4xl font-black tracking-tight text-slate-900 sm:text-[3rem]">
+              <h2 className="mt-2.5 text-[2.1rem] font-black tracking-tight text-slate-900 sm:text-[2.55rem]">
                 {portfolio.title}
               </h2>
-              <p className="mt-3 text-lg text-slate-400">
+              <p className="mt-2 text-base text-slate-400 sm:text-[1.05rem]">
                 작성일: {formatCompactKoreanDate(portfolio.createdAt)}
               </p>
             </div>
@@ -222,7 +224,7 @@ function PortfolioResult({
             <TrashIcon />
             삭제
           </ActionButton>
-          <ActionButton tone="primary" onClick={onExport}>
+          <ActionButton tone="dark" onClick={onExport}>
             <DownloadIcon />
             내보내기
           </ActionButton>
@@ -247,16 +249,16 @@ function PortfolioResult({
         return (
           <section
             key={sectionKey}
-            className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
           >
             <span
-              className="absolute left-0 top-6 h-[calc(100%-3rem)] w-1 rounded-r-full"
+              className="absolute left-0 top-5 h-[calc(100%-2.5rem)] w-1 rounded-r-full"
               style={{ backgroundColor: sectionMeta.accent }}
             />
 
-            <div className="flex items-start gap-5">
+            <div className="flex items-start gap-4">
               <span
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px]"
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]"
                 style={{
                   backgroundColor: sectionMeta.surface,
                   color: sectionMeta.accent,
@@ -267,12 +269,12 @@ function PortfolioResult({
 
               <div className="min-w-0 flex-1">
                 <h3
-                  className="text-3xl font-black tracking-tight"
+                  className="text-[1.7rem] font-black tracking-tight sm:text-[1.85rem]"
                   style={{ color: sectionMeta.accent }}
                 >
                   {sectionMeta.label}
                 </h3>
-                <div className="mt-6">
+                <div className="mt-4.5">
                   {renderSectionBody(sectionKey, sectionValue)}
                 </div>
               </div>

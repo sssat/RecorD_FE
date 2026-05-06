@@ -615,8 +615,8 @@ function PortfolioList({
             AI 생성
           </ActionButton>
           <ActionButton
+            tone="dark"
             onClick={onOpenCreateDialog}
-            className="shadow-[0_20px_35px_-24px_rgba(168,212,95,0.9)]"
           >
             <PlusIcon />
             새 포트폴리오
@@ -656,11 +656,7 @@ function PortfolioList({
           >
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
-                <h4
-                  className={`text-3xl font-black tracking-tight ${
-                    index === 0 ? 'text-[#99c74c]' : 'text-slate-900'
-                  }`}
-                >
+                <h4 className="text-3xl font-black tracking-tight text-slate-900">
                   {portfolio.title}
                 </h4>
                 <p className="mt-3 text-lg text-slate-400">
@@ -893,8 +889,7 @@ function PortfolioEditorDialog({
             </button>
             <button
               type="submit"
-              className="rounded-[22px] px-6 py-4 text-base font-semibold text-white transition hover:brightness-95"
-              style={{ backgroundColor: accentColor }}
+              className="rounded-[22px] bg-[#454545] px-6 py-4 text-base font-semibold text-white transition hover:bg-[#363636]"
             >
               {mode === 'edit' ? '저장하기' : '포트폴리오 저장'}
             </button>
@@ -933,10 +928,6 @@ function AiGenerationDialog({
           <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-[2.2rem]">
             AI 포트폴리오 생성 준비
           </h2>
-          <p className="mt-3 text-base leading-7 text-slate-500">
-            Whisper AI 회의록과 완료된 할 일을 바탕으로 Google AI Studio가 STAR
-            초안을 만드는 흐름을 UI로 먼저 연결했습니다.
-          </p>
         </div>
 
         <div
@@ -982,8 +973,7 @@ function AiGenerationDialog({
             type="button"
             onClick={onGenerate}
             disabled={!canGenerate || isGenerating}
-            className="rounded-[22px] px-6 py-4 text-base font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-            style={{ backgroundColor: theme.accent }}
+            className="rounded-[22px] bg-[#454545] px-6 py-4 text-base font-semibold text-white transition hover:bg-[#363636] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isGenerating ? '생성 중...' : '생성'}
           </button>
