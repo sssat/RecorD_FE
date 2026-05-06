@@ -567,7 +567,7 @@ function OverviewTab({ project, workspace }) {
         </div>
       </SectionCard>
 
-      <SectionCard title="포트폴리오 생성 근거">
+      <SectionCard title="포트폴리오 작성 참고 자료">
         <div className="grid gap-4 md:grid-cols-2">
           {completedTodos.slice(0, 6).map((todo) => (
             <article
