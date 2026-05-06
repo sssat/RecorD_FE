@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
-import ProjectForm from './ProjectForm';
-import PortfolioResult from './PortfolioResult';
-import PortfolioExport from './PortfolioExport';
+import { useEffect, useMemo, useState } from "react";
+import ProjectForm from "./ProjectForm";
+import PortfolioResult from "./PortfolioResult";
+import PortfolioExport from "./PortfolioExport";
 import {
   getProjectWorkspace,
   PROJECT_COLOR_THEMES,
   PROJECT_STATUS_META,
-} from '../../data/projectApi';
+} from "../../data/projectApi";
 import {
   formatCompactKoreanDate,
   formatDateRange,
   formatKoreanDate,
   getDurationDays,
-} from '../../utils/dateUtils';
+} from "../../utils/dateUtils";
 
 const PROJECTS_PER_PAGE = 6;
 
@@ -28,7 +28,7 @@ function PlusIcon() {
   );
 }
 
-function SparkleIcon({ className = 'h-5 w-5' }) {
+function SparkleIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -163,23 +163,23 @@ function createPortfolioFormValues(portfolio) {
   if (portfolio) {
     return {
       title: portfolio.title,
-      keywords: portfolio.keywords.join(', '),
+      keywords: portfolio.keywords.join(", "),
       situation: portfolio.situation,
       task: portfolio.task,
       action: Array.isArray(portfolio.action)
-        ? portfolio.action.join('\n')
+        ? portfolio.action.join("\n")
         : portfolio.action,
       result: portfolio.result,
     };
   }
 
   return {
-    title: '',
-    keywords: '',
-    situation: '',
-    task: '',
-    action: '',
-    result: '',
+    title: "",
+    keywords: "",
+    situation: "",
+    task: "",
+    action: "",
+    result: "",
   };
 }
 
@@ -188,13 +188,13 @@ function getProjectTheme(colorKey) {
 }
 
 function hexToRgb(hexColor) {
-  const normalizedColor = hexColor.replace('#', '');
+  const normalizedColor = hexColor.replace("#", "");
   const safeColor =
     normalizedColor.length === 3
       ? normalizedColor
-          .split('')
+          .split("")
           .map((character) => `${character}${character}`)
-          .join('')
+          .join("")
       : normalizedColor;
   const parsedValue = Number.parseInt(safeColor, 16);
 
@@ -215,7 +215,9 @@ function mixColorWithWhite(hexColor, whiteRatio) {
 
 function getRelatedMeetingNotes(project, workspace) {
   const noteIdSet = new Set(project.meetingIds);
-  return workspace.meetingNotes.filter((meetingNote) => noteIdSet.has(meetingNote.id));
+  return workspace.meetingNotes.filter((meetingNote) =>
+    noteIdSet.has(meetingNote.id),
+  );
 }
 
 function getRelatedTodos(project, workspace) {
@@ -225,7 +227,9 @@ function getRelatedTodos(project, workspace) {
 
 function getRelatedSchedules(project, workspace) {
   const scheduleIdSet = new Set(project.scheduleIds);
-  return workspace.schedules.filter((schedule) => scheduleIdSet.has(schedule.id));
+  return workspace.schedules.filter((schedule) =>
+    scheduleIdSet.has(schedule.id),
+  );
 }
 
 function getProjectMetrics(project, workspace) {
@@ -248,7 +252,7 @@ function buildGeneratedPortfolio(project, workspace) {
   const relatedSchedules = getRelatedSchedules(project, workspace);
   const completedTodos = relatedTodos.filter((todo) => todo.completed);
   const theme = getProjectTheme(project.colorKey);
-  const firstMeetingTitle = relatedMeetingNotes[0]?.title ?? '프로젝트 킥오프';
+  const firstMeetingTitle = relatedMeetingNotes[0]?.title ?? "프로젝트 킥오프";
 
   return {
     id: `portfolio-${Date.now()}`,
@@ -256,7 +260,7 @@ function buildGeneratedPortfolio(project, workspace) {
     title: `${project.name} 경험 정리`,
     createdAt: new Date().toISOString().slice(0, 10),
     summary: `${project.name}에서 쌓인 회의록과 완료된 할 일을 기반으로 생성한 STAR 포트폴리오 초안입니다.`,
-    keywords: [...project.tags.slice(0, 3), '문제 해결', theme.name].filter(
+    keywords: [...project.tags.slice(0, 3), "문제 해결", theme.name].filter(
       (keyword, index, allKeywords) => allKeywords.indexOf(keyword) === index,
     ),
     situation: `${project.description} 프로젝트를 진행하며 ${relatedMeetingNotes.length}개의 회의록과 ${relatedSchedules.length}개의 일정을 축적했습니다. 특히 ${firstMeetingTitle} 이후 역할과 산출물을 명확히 정리할 필요가 있었습니다.`,
@@ -270,20 +274,15 @@ function buildGeneratedPortfolio(project, workspace) {
   };
 }
 
-function ActionButton({
-  children,
-  onClick,
-  tone = 'primary',
-  className = '',
-}) {
+function ActionButton({ children, onClick, tone = "primary", className = "" }) {
   const toneClassName =
-    tone === 'secondary'
-      ? 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-      : tone === 'dark'
-        ? 'bg-[#454545] text-white shadow-[0_18px_35px_-24px_rgba(69,69,69,0.62)] hover:bg-[#363636]'
-      : tone === 'outline-accent'
-        ? 'border border-[#a8d45f] bg-white text-[#7baa3a] hover:bg-[#f4f9e8]'
-        : 'bg-[#a8d45f] text-white hover:brightness-95';
+    tone === "secondary"
+      ? "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+      : tone === "dark"
+        ? "bg-[#454545] text-white shadow-[0_18px_35px_-24px_rgba(69,69,69,0.62)] hover:bg-[#363636]"
+        : tone === "outline-accent"
+          ? "border border-[#a8d45f] bg-white text-[#7baa3a] hover:bg-[#f4f9e8]"
+          : "bg-[#a8d45f] text-white hover:brightness-95";
 
   return (
     <button
@@ -296,7 +295,13 @@ function ActionButton({
   );
 }
 
-function SectionCard({ title, children, rightSlot, className = '', bodyClassName = '' }) {
+function SectionCard({
+  title,
+  children,
+  rightSlot,
+  className = "",
+  bodyClassName = "",
+}) {
   return (
     <section
       className={`rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 ${className}`}
@@ -349,17 +354,22 @@ function ProjectCard({ project, metrics, onSelect }) {
 
       <div className="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-lg text-slate-400">
         <span>
-          회의록 <strong className="ml-1 text-slate-900">{metrics.meetingCount}</strong>
+          회의록{" "}
+          <strong className="ml-1 text-slate-900">
+            {metrics.meetingCount}
+          </strong>
         </span>
         <span>
-          할일{' '}
+          할일{" "}
           <strong className="ml-1 text-slate-900">
             {metrics.completedTodoCount}/{metrics.todoCount}
           </strong>
         </span>
         <span>
-          포트폴리오{' '}
-          <strong className="ml-1 text-slate-900">{metrics.portfolioCount}</strong>
+          포트폴리오{" "}
+          <strong className="ml-1 text-slate-900">
+            {metrics.portfolioCount}
+          </strong>
         </span>
       </div>
 
@@ -390,10 +400,12 @@ function InfoMetricCard({ label, value, subtleValue, theme }) {
       className="rounded-[22px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_35px_-30px_rgba(91,122,26,0.26)] sm:px-6 sm:py-5"
       style={{
         background: `linear-gradient(180deg, ${surfaceTopColor} 0%, ${surfaceBottomColor} 100%)`,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: "rgba(255, 255, 255, 0.2)",
       }}
     >
-      <p className="text-sm font-medium text-white/80 sm:text-[15px]">{label}</p>
+      <p className="text-sm font-medium text-white/80 sm:text-[15px]">
+        {label}
+      </p>
       <p className="mt-3 text-[2.15rem] font-black tracking-tight text-white sm:text-[2.5rem]">
         {value}
       </p>
@@ -404,10 +416,7 @@ function InfoMetricCard({ label, value, subtleValue, theme }) {
   );
 }
 
-function OverviewTab({
-  project,
-  workspace,
-}) {
+function OverviewTab({ project, workspace }) {
   const theme = getProjectTheme(project.colorKey);
   const metrics = getProjectMetrics(project, workspace);
   const relatedMeetingNotes = getRelatedMeetingNotes(project, workspace);
@@ -460,7 +469,7 @@ function OverviewTab({
         </SectionCard>
 
         <SectionCard title="진행 현황">
-          <dl className="space-y-5 text-lg">
+          <dl className="space-y-6 text-lg">
             <div className="flex items-center justify-between gap-4">
               <dt className="text-slate-400">전체 태스크</dt>
               <dd className="font-semibold text-slate-900">
@@ -479,11 +488,11 @@ function OverviewTab({
                 {metrics.remainingTodoCount}개
               </dd>
             </div>
-            <div className="mt-6 rounded-[26px] border border-slate-200 bg-slate-50 px-5 py-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-                STAR 근거 데이터
+            <div className="rounded-[26px] border border-slate-200 bg-slate-50 px-5 py-6">
+              <p className="text-sm font-semibold text-slate-500">
+                STAR 참고 자료
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
                   회의록 {metrics.meetingCount}개
                 </span>
@@ -521,7 +530,8 @@ function OverviewTab({
                 </span>
               </div>
               <p className="mt-2 text-sm text-slate-400">
-                {formatCompactKoreanDate(meetingNote.date)} · Whisper AI 요약 저장
+                {formatCompactKoreanDate(meetingNote.date)} · Whisper AI 요약
+                저장
               </p>
               <p className="mt-4 text-base leading-7 text-slate-600">
                 {meetingNote.summary}
@@ -539,9 +549,7 @@ function OverviewTab({
               className="rounded-[24px] bg-slate-50 px-5 py-5"
             >
               <div className="flex items-start gap-3">
-                <span
-                  className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-500"
-                >
+                <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-500">
                   <CalendarIcon />
                 </span>
                 <div>
@@ -549,7 +557,8 @@ function OverviewTab({
                     {schedule.title}
                   </h4>
                   <p className="mt-2 text-sm text-slate-400">
-                    {formatCompactKoreanDate(schedule.date)} · {schedule.timeLabel}
+                    {formatCompactKoreanDate(schedule.date)} ·{" "}
+                    {schedule.timeLabel}
                   </p>
                 </div>
               </div>
@@ -614,12 +623,8 @@ function PortfolioList({
             <SparkleIcon />
             AI 생성
           </ActionButton>
-          <ActionButton
-            tone="dark"
-            onClick={onOpenCreateDialog}
-          >
-            <PlusIcon />
-            새 포트폴리오
+          <ActionButton tone="dark" onClick={onOpenCreateDialog}>
+            <PlusIcon />새 포트폴리오
           </ActionButton>
         </div>
       </div>
@@ -651,7 +656,7 @@ function PortfolioList({
             type="button"
             onClick={() => onSelectPortfolio(portfolio.id)}
             className={`w-full rounded-[32px] border bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_18px_35px_-28px_rgba(15,23,42,0.28)] sm:p-8 ${
-              index === 0 ? 'border-[#b8dd7f]' : 'border-slate-200'
+              index === 0 ? "border-[#b8dd7f]" : "border-slate-200"
             }`}
           >
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -666,23 +671,25 @@ function PortfolioList({
                   {clampText(portfolio.situation, 180)}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  {['Situation', 'Task', 'Action', 'Result'].map((label, labelIndex) => {
-                    const chipClassName =
-                      labelIndex === 1
-                        ? 'bg-[#eef4ff] text-[#698bdd]'
-                        : labelIndex === 3
-                          ? 'bg-[#fff8dd] text-[#cfb630]'
-                          : 'bg-[#f4f9e8] text-[#82b83f]';
+                  {["Situation", "Task", "Action", "Result"].map(
+                    (label, labelIndex) => {
+                      const chipClassName =
+                        labelIndex === 1
+                          ? "bg-[#eef4ff] text-[#698bdd]"
+                          : labelIndex === 3
+                            ? "bg-[#fff8dd] text-[#cfb630]"
+                            : "bg-[#f4f9e8] text-[#82b83f]";
 
-                    return (
-                      <span
-                        key={label}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold ${chipClassName}`}
-                      >
-                        {label}
-                      </span>
-                    );
-                  })}
+                      return (
+                        <span
+                          key={label}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold ${chipClassName}`}
+                        >
+                          {label}
+                        </span>
+                      );
+                    },
+                  )}
                 </div>
               </div>
               <span className="self-start text-slate-300 lg:mt-4">
@@ -698,7 +705,8 @@ function PortfolioList({
               아직 생성된 STAR 포트폴리오가 없습니다.
             </p>
             <p className="mt-3 text-base text-slate-400">
-              AI 생성으로 초안을 만들거나 직접 작성해 첫 포트폴리오를 시작해보세요.
+              AI 생성으로 초안을 만들거나 직접 작성해 첫 포트폴리오를
+              시작해보세요.
             </p>
           </div>
         ) : null}
@@ -718,11 +726,11 @@ function PortfolioEditorDialog({
   const [formValues, setFormValues] = useState(() =>
     createPortfolioFormValues(initialValues),
   );
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setFormValues(createPortfolioFormValues(initialValues));
-    setErrorMessage('');
+    setErrorMessage("");
   }, [initialValues]);
 
   const handleChange = (fieldName, nextValue) => {
@@ -742,20 +750,20 @@ function PortfolioEditorDialog({
       !formValues.action.trim() ||
       !formValues.result.trim()
     ) {
-      setErrorMessage('제목과 STAR 모든 항목을 입력해주세요.');
+      setErrorMessage("제목과 STAR 모든 항목을 입력해주세요.");
       return;
     }
 
     onSubmit({
       title: formValues.title.trim(),
       keywords: formValues.keywords
-        .split(',')
+        .split(",")
         .map((keyword) => keyword.trim())
         .filter(Boolean),
       situation: formValues.situation.trim(),
       task: formValues.task.trim(),
       action: formValues.action
-        .split('\n')
+        .split("\n")
         .map((line) => line.trim())
         .filter(Boolean),
       result: formValues.result.trim(),
@@ -783,7 +791,9 @@ function PortfolioEditorDialog({
               {projectName}
             </span>
             <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-900 sm:text-[2.35rem]">
-              {mode === 'edit' ? 'STAR 포트폴리오 수정' : '새 STAR 포트폴리오 작성'}
+              {mode === "edit"
+                ? "STAR 포트폴리오 수정"
+                : "새 STAR 포트폴리오 작성"}
             </h2>
             <p className="mt-3 text-base leading-7 text-slate-500">
               Situation, Task, Action, Result 흐름으로 경험을 정리하면 이력서와
@@ -804,7 +814,7 @@ function PortfolioEditorDialog({
               </span>
               <input
                 value={formValues.title}
-                onChange={(event) => handleChange('title', event.target.value)}
+                onChange={(event) => handleChange("title", event.target.value)}
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg text-slate-900 outline-none transition focus:border-slate-400"
                 placeholder="예: 프론트엔드 개발 역량"
               />
@@ -817,7 +827,7 @@ function PortfolioEditorDialog({
               <input
                 value={formValues.keywords}
                 onChange={(event) =>
-                  handleChange('keywords', event.target.value)
+                  handleChange("keywords", event.target.value)
                 }
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg text-slate-900 outline-none transition focus:border-slate-400"
                 placeholder="예: React, UI/UX, 협업"
@@ -831,7 +841,7 @@ function PortfolioEditorDialog({
               <textarea
                 value={formValues.situation}
                 onChange={(event) =>
-                  handleChange('situation', event.target.value)
+                  handleChange("situation", event.target.value)
                 }
                 rows={6}
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg leading-8 text-slate-900 outline-none transition focus:border-slate-400"
@@ -845,7 +855,7 @@ function PortfolioEditorDialog({
               </span>
               <textarea
                 value={formValues.task}
-                onChange={(event) => handleChange('task', event.target.value)}
+                onChange={(event) => handleChange("task", event.target.value)}
                 rows={6}
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg leading-8 text-slate-900 outline-none transition focus:border-slate-400"
                 placeholder="맡은 역할과 과제를 설명하세요"
@@ -858,7 +868,7 @@ function PortfolioEditorDialog({
               </span>
               <textarea
                 value={formValues.action}
-                onChange={(event) => handleChange('action', event.target.value)}
+                onChange={(event) => handleChange("action", event.target.value)}
                 rows={8}
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg leading-8 text-slate-900 outline-none transition focus:border-slate-400"
                 placeholder="구체적인 행동과 노력을 한 줄씩 작성하세요"
@@ -871,7 +881,7 @@ function PortfolioEditorDialog({
               </span>
               <textarea
                 value={formValues.result}
-                onChange={(event) => handleChange('result', event.target.value)}
+                onChange={(event) => handleChange("result", event.target.value)}
                 rows={6}
                 className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-lg leading-8 text-slate-900 outline-none transition focus:border-slate-400"
                 placeholder="달성한 성과와 결과를 설명하세요"
@@ -891,7 +901,7 @@ function PortfolioEditorDialog({
               type="submit"
               className="rounded-[22px] bg-[#454545] px-6 py-4 text-base font-semibold text-white transition hover:bg-[#363636]"
             >
-              {mode === 'edit' ? '저장하기' : '포트폴리오 저장'}
+              {mode === "edit" ? "저장하기" : "포트폴리오 저장"}
             </button>
           </div>
         </form>
@@ -946,8 +956,9 @@ function AiGenerationDialog({
                 AI가 데이터를 분석 중입니다...
               </p>
               <p className="mt-3 text-base leading-7 text-slate-600">
-                회의록 {metrics.meetingCount}개와 완료된 할 일 {metrics.completedTodoCount}개,
-                일정 {project.scheduleIds.length}개를 기반으로 {project.name}
+                회의록 {metrics.meetingCount}개와 완료된 할 일{" "}
+                {metrics.completedTodoCount}개, 일정{" "}
+                {project.scheduleIds.length}개를 기반으로 {project.name}
                 경험을 STAR 포트폴리오로 정리합니다.
               </p>
             </div>
@@ -975,7 +986,7 @@ function AiGenerationDialog({
             disabled={!canGenerate || isGenerating}
             className="rounded-[22px] bg-[#454545] px-6 py-4 text-base font-semibold text-white transition hover:bg-[#363636] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isGenerating ? '생성 중...' : '생성'}
+            {isGenerating ? "생성 중..." : "생성"}
           </button>
         </div>
       </div>
@@ -987,7 +998,7 @@ function ProjectPage() {
   const [workspace, setWorkspace] = useState(() => getProjectWorkspace());
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [projectFormState, setProjectFormState] = useState(null);
   const [portfolioFormState, setPortfolioFormState] = useState(null);
@@ -1007,7 +1018,9 @@ function ProjectPage() {
 
   const selectedProject =
     selectedProjectId != null
-      ? workspace.projects.find((project) => project.id === selectedProjectId) ?? null
+      ? (workspace.projects.find(
+          (project) => project.id === selectedProjectId,
+        ) ?? null)
       : null;
 
   const selectedProjectPortfolios = useMemo(() => {
@@ -1022,31 +1035,37 @@ function ProjectPage() {
 
   const selectedPortfolio =
     selectedPortfolioId != null
-      ? workspace.portfolios.find((portfolio) => portfolio.id === selectedPortfolioId) ?? null
+      ? (workspace.portfolios.find(
+          (portfolio) => portfolio.id === selectedPortfolioId,
+        ) ?? null)
       : null;
 
   const editingProject =
     projectFormState?.projectId != null
-      ? workspace.projects.find(
+      ? (workspace.projects.find(
           (project) => project.id === projectFormState.projectId,
-        ) ?? null
+        ) ?? null)
       : null;
 
   const editingPortfolio =
     portfolioFormState?.portfolioId != null
-      ? workspace.portfolios.find(
+      ? (workspace.portfolios.find(
           (portfolio) => portfolio.id === portfolioFormState.portfolioId,
-        ) ?? null
+        ) ?? null)
       : null;
 
   const exportPortfolio =
     exportPortfolioId != null
-      ? workspace.portfolios.find((portfolio) => portfolio.id === exportPortfolioId) ?? null
+      ? (workspace.portfolios.find(
+          (portfolio) => portfolio.id === exportPortfolioId,
+        ) ?? null)
       : null;
 
   const aiDialogProject =
     aiDialogProjectId != null
-      ? workspace.projects.find((project) => project.id === aiDialogProjectId) ?? null
+      ? (workspace.projects.find(
+          (project) => project.id === aiDialogProjectId,
+        ) ?? null)
       : null;
 
   useEffect(() => {
@@ -1058,22 +1077,22 @@ function ProjectPage() {
   const handleOpenProject = (projectId) => {
     setSelectedProjectId(projectId);
     setSelectedPortfolioId(null);
-    setActiveTab('overview');
+    setActiveTab("overview");
   };
 
   const handleBack = () => {
     if (selectedPortfolioId) {
       setSelectedPortfolioId(null);
-      setActiveTab('portfolios');
+      setActiveTab("portfolios");
       return;
     }
 
     setSelectedProjectId(null);
-    setActiveTab('overview');
+    setActiveTab("overview");
   };
 
   const handleSubmitProject = (formValues) => {
-    if (projectFormState?.mode === 'edit' && editingProject) {
+    if (projectFormState?.mode === "edit" && editingProject) {
       setWorkspace((currentWorkspace) => ({
         ...currentWorkspace,
         projects: currentWorkspace.projects.map((project) =>
@@ -1102,7 +1121,7 @@ function ProjectPage() {
     setProjectFormState(null);
     setSelectedProjectId(nextProjectId);
     setSelectedPortfolioId(null);
-    setActiveTab('overview');
+    setActiveTab("overview");
     setCurrentPage(1);
   };
 
@@ -1130,7 +1149,7 @@ function ProjectPage() {
     }));
     setSelectedProjectId(null);
     setSelectedPortfolioId(null);
-    setActiveTab('overview');
+    setActiveTab("overview");
   };
 
   const handleSubmitPortfolio = (formValues) => {
@@ -1138,7 +1157,7 @@ function ProjectPage() {
       return;
     }
 
-    if (portfolioFormState?.mode === 'edit' && editingPortfolio) {
+    if (portfolioFormState?.mode === "edit" && editingPortfolio) {
       setWorkspace((currentWorkspace) => ({
         ...currentWorkspace,
         portfolios: currentWorkspace.portfolios.map((portfolio) =>
@@ -1174,7 +1193,7 @@ function ProjectPage() {
 
     setSelectedPortfolioId(nextPortfolioId);
     setPortfolioFormState(null);
-    setActiveTab('portfolios');
+    setActiveTab("portfolios");
   };
 
   const handleDeletePortfolio = () => {
@@ -1197,7 +1216,7 @@ function ProjectPage() {
       ),
     }));
     setSelectedPortfolioId(null);
-    setActiveTab('portfolios');
+    setActiveTab("portfolios");
   };
 
   const handleGeneratePortfolio = () => {
@@ -1208,7 +1227,10 @@ function ProjectPage() {
     setIsGeneratingPortfolio(true);
 
     window.setTimeout(() => {
-      const generatedPortfolio = buildGeneratedPortfolio(aiDialogProject, workspace);
+      const generatedPortfolio = buildGeneratedPortfolio(
+        aiDialogProject,
+        workspace,
+      );
 
       setWorkspace((currentWorkspace) => ({
         ...currentWorkspace,
@@ -1216,7 +1238,7 @@ function ProjectPage() {
       }));
       setSelectedProjectId(aiDialogProject.id);
       setSelectedPortfolioId(generatedPortfolio.id);
-      setActiveTab('portfolios');
+      setActiveTab("portfolios");
       setAiDialogProjectId(null);
       setIsGeneratingPortfolio(false);
     }, 850);
@@ -1235,10 +1257,9 @@ function ProjectPage() {
         </div>
         <ActionButton
           tone="dark"
-          onClick={() => setProjectFormState({ mode: 'create' })}
+          onClick={() => setProjectFormState({ mode: "create" })}
         >
-          <PlusIcon />
-          새 프로젝트
+          <PlusIcon />새 프로젝트
         </ActionButton>
       </div>
 
@@ -1291,29 +1312,30 @@ function ProjectPage() {
             <p className="text-base leading-8 text-slate-400 sm:text-lg">
               AI가 회의록, 일정, 할 일 목록을 분석하여 STAR(Situation, Task,
               Action, Result) 기법에 맞춘 포트폴리오 초안을 자동으로 작성합니다.
-              한 프로젝트에서 여러 관점의 포트폴리오를 만들 수 있도록 구성했습니다.
+              한 프로젝트에서 여러 관점의 포트폴리오를 만들 수 있도록
+              구성했습니다.
             </p>
             <div className="mt-6 grid gap-3 lg:grid-cols-4">
               {[
                 {
-                  title: 'Situation',
-                  description: '프로젝트 배경과 상황',
-                  titleClassName: 'text-[#8abf43]',
+                  title: "Situation",
+                  description: "프로젝트 배경과 상황",
+                  titleClassName: "text-[#8abf43]",
                 },
                 {
-                  title: 'Task',
-                  description: '맡은 역할과 과제',
-                  titleClassName: 'text-[#6b90df]',
+                  title: "Task",
+                  description: "맡은 역할과 과제",
+                  titleClassName: "text-[#6b90df]",
                 },
                 {
-                  title: 'Action',
-                  description: '구체적인 행동과 노력',
-                  titleClassName: 'text-[#7bbd64]',
+                  title: "Action",
+                  description: "구체적인 행동과 노력",
+                  titleClassName: "text-[#7bbd64]",
                 },
                 {
-                  title: 'Result',
-                  description: '달성한 성과와 결과',
-                  titleClassName: 'text-[#d0b72f]',
+                  title: "Result",
+                  description: "달성한 성과와 결과",
+                  titleClassName: "text-[#d0b72f]",
                 },
               ].map((section) => (
                 <div
@@ -1376,7 +1398,7 @@ function ProjectPage() {
                   type="button"
                   onClick={() =>
                     setProjectFormState({
-                      mode: 'edit',
+                      mode: "edit",
                       projectId: selectedProject.id,
                     })
                   }
@@ -1399,7 +1421,9 @@ function ProjectPage() {
             <div className="grid gap-3 md:grid-cols-3">
               <InfoMetricCard
                 label="회의록"
-                value={getProjectMetrics(selectedProject, workspace).meetingCount}
+                value={
+                  getProjectMetrics(selectedProject, workspace).meetingCount
+                }
                 theme={getProjectTheme(selectedProject.colorKey)}
               />
               <InfoMetricCard
@@ -1409,7 +1433,9 @@ function ProjectPage() {
               />
               <InfoMetricCard
                 label="포트폴리오"
-                value={getProjectMetrics(selectedProject, workspace).portfolioCount}
+                value={
+                  getProjectMetrics(selectedProject, workspace).portfolioCount
+                }
                 theme={getProjectTheme(selectedProject.colorKey)}
               />
             </div>
@@ -1420,17 +1446,20 @@ function ProjectPage() {
           <button
             type="button"
             onClick={() => {
-              setActiveTab('overview');
+              setActiveTab("overview");
               setSelectedPortfolioId(null);
             }}
             className={`rounded-[28px] border px-6 py-5 text-2xl font-semibold transition ${
-              activeTab === 'overview'
-                ? 'border-transparent text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+              activeTab === "overview"
+                ? "border-transparent text-white"
+                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
             }`}
             style={
-              activeTab === 'overview'
-                ? { backgroundColor: getProjectTheme(selectedProject.colorKey).accent }
+              activeTab === "overview"
+                ? {
+                    backgroundColor: getProjectTheme(selectedProject.colorKey)
+                      .accent,
+                  }
                 : undefined
             }
           >
@@ -1439,17 +1468,20 @@ function ProjectPage() {
           <button
             type="button"
             onClick={() => {
-              setActiveTab('portfolios');
+              setActiveTab("portfolios");
               setSelectedPortfolioId(null);
             }}
             className={`rounded-[28px] border px-6 py-5 text-2xl font-semibold transition ${
-              activeTab === 'portfolios'
-                ? 'border-transparent text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+              activeTab === "portfolios"
+                ? "border-transparent text-white"
+                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
             }`}
             style={
-              activeTab === 'portfolios'
-                ? { backgroundColor: getProjectTheme(selectedProject.colorKey).accent }
+              activeTab === "portfolios"
+                ? {
+                    backgroundColor: getProjectTheme(selectedProject.colorKey)
+                      .accent,
+                  }
                 : undefined
             }
           >
@@ -1457,7 +1489,7 @@ function ProjectPage() {
           </button>
         </div>
 
-        {activeTab === 'overview' ? (
+        {activeTab === "overview" ? (
           <OverviewTab project={selectedProject} workspace={workspace} />
         ) : selectedPortfolio ? (
           <PortfolioResult
@@ -1466,11 +1498,11 @@ function ProjectPage() {
             accentColor={getProjectTheme(selectedProject.colorKey).accent}
             onBack={() => {
               setSelectedPortfolioId(null);
-              setActiveTab('portfolios');
+              setActiveTab("portfolios");
             }}
             onEdit={() =>
               setPortfolioFormState({
-                mode: 'edit',
+                mode: "edit",
                 projectId: selectedProject.id,
                 portfolioId: selectedPortfolio.id,
               })
@@ -1486,7 +1518,7 @@ function ProjectPage() {
             onOpenAiDialog={() => setAiDialogProjectId(selectedProject.id)}
             onOpenCreateDialog={() =>
               setPortfolioFormState({
-                mode: 'create',
+                mode: "create",
                 projectId: selectedProject.id,
               })
             }
