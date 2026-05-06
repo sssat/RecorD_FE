@@ -383,18 +383,18 @@ function InfoMetricCard({ label, value, subtleValue, theme }) {
 
   return (
     <div
-      className="rounded-[26px] border px-7 py-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_35px_-30px_rgba(91,122,26,0.26)]"
+      className="rounded-[22px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_18px_35px_-30px_rgba(91,122,26,0.26)] sm:px-6 sm:py-5"
       style={{
         background: `linear-gradient(180deg, ${surfaceTopColor} 0%, ${surfaceBottomColor} 100%)`,
         borderColor: 'rgba(255, 255, 255, 0.2)',
       }}
     >
-      <p className="text-lg font-medium text-white/80">{label}</p>
-      <p className="mt-5 text-5xl font-black tracking-tight text-white">
+      <p className="text-sm font-medium text-white/80 sm:text-[15px]">{label}</p>
+      <p className="mt-3 text-[2.15rem] font-black tracking-tight text-white sm:text-[2.5rem]">
         {value}
       </p>
       {subtleValue ? (
-        <p className="mt-3 text-sm text-white/75">{subtleValue}</p>
+        <p className="mt-2 text-xs text-white/75 sm:text-sm">{subtleValue}</p>
       ) : null}
     </div>
   );
@@ -1355,22 +1355,22 @@ function ProjectPage() {
         </button>
 
         <section
-          className="overflow-hidden rounded-[36px] px-6 py-6 shadow-sm sm:px-8 sm:py-8"
+          className="overflow-hidden rounded-[32px] px-5 py-4 shadow-sm sm:px-6 sm:py-5"
           style={{
             background: getProjectTheme(selectedProject.colorKey).heroGradient,
           }}
         >
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-              <div className="flex items-start gap-6">
-                <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-[30px] bg-white/14 text-white backdrop-blur-[2px]">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="flex items-start gap-4">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-white/14 text-white backdrop-blur-[2px]">
                   <FolderIcon />
                 </span>
                 <div className="min-w-0">
-                  <h1 className="text-4xl font-black tracking-tight text-white sm:text-[3.35rem]">
+                  <h1 className="text-[2rem] font-black tracking-tight text-white sm:text-[2.35rem]">
                     {selectedProject.name}
                   </h1>
-                  <p className="mt-4 text-xl leading-9 text-white/80">
+                  <p className="mt-2 text-base leading-7 text-white/80 sm:text-[1.1rem]">
                     {selectedProject.description}
                   </p>
                 </div>
@@ -1385,7 +1385,7 @@ function ProjectPage() {
                       projectId: selectedProject.id,
                     })
                   }
-                  className="rounded-2xl border border-white/25 bg-white/10 p-3 transition hover:bg-white/20"
+                  className="rounded-2xl border border-white/25 bg-white/10 p-2 transition hover:bg-white/20"
                   aria-label="프로젝트 수정"
                 >
                   <PencilIcon />
@@ -1393,7 +1393,7 @@ function ProjectPage() {
                 <button
                   type="button"
                   onClick={handleDeleteProject}
-                  className="rounded-2xl border border-white/25 bg-white/10 p-3 transition hover:bg-white/20"
+                  className="rounded-2xl border border-white/25 bg-white/10 p-2 transition hover:bg-white/20"
                   aria-label="프로젝트 삭제"
                 >
                   <TrashIcon />
@@ -1401,7 +1401,7 @@ function ProjectPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <InfoMetricCard
                 label="회의록"
                 value={getProjectMetrics(selectedProject, workspace).meetingCount}
