@@ -6,6 +6,7 @@ import {
   getProjectWorkspace,
   PROJECT_COLOR_THEMES,
   PROJECT_STATUS_META,
+  saveProjectWorkspace,
 } from "../../data/projectApi";
 import {
   formatCompactKoreanDate,
@@ -1067,6 +1068,10 @@ function ProjectPage() {
           (project) => project.id === aiDialogProjectId,
         ) ?? null)
       : null;
+
+  useEffect(() => {
+    saveProjectWorkspace(workspace);
+  }, [workspace]);
 
   useEffect(() => {
     if (currentPage > totalPages) {

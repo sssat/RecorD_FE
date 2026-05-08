@@ -8,6 +8,7 @@ import {
   getMeetingProjects,
   updateMeetingNote,
 } from "../../data/meetingApi";
+import { getProjectTheme, getProjectWorkspace } from "../../data/projectApi";
 import SttResult from "./SttResult";
 import SummaryResult from "./SummaryResult";
 import VoiceUploader from "./VoiceUploader";
@@ -342,15 +343,29 @@ function ActionButton({
   );
 }
 
-function TagChip({ children, tone = "soft" }) {
+function buildProjectChipStyle(projectTheme) {
+  return {
+    backgroundColor: projectTheme.accentSoft,
+    borderColor: projectTheme.border,
+    color: projectTheme.accentStrong,
+  };
+}
+
+function TagChip({ children, tone = "soft", projectTheme = null }) {
+  const resolvedProjectTheme = projectTheme ?? getProjectTheme("green");
   const toneClassName =
     tone === "project"
-      ? "bg-[#eef6cd] text-[#607a27]"
+      ? "border"
       : "bg-slate-50 text-[#172554]";
 
   return (
     <span
       className={`inline-flex rounded-full px-4 py-2 text-sm font-medium ${toneClassName}`}
+      style={
+        tone === "project"
+          ? buildProjectChipStyle(resolvedProjectTheme)
+          : undefined
+      }
     >
       {children}
     </span>
@@ -462,7 +477,7 @@ function HelperBanner({ children, className = "" }) {
   );
 }
 
-function MeetingNoteCard({ meetingNote }) {
+function MeetingNoteCard({ meetingNote, projectTheme }) {
   return (
     <Link
       to={`/records/${meetingNote.id}`}
@@ -483,7 +498,9 @@ function MeetingNoteCard({ meetingNote }) {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <TagChip tone="project">{meetingNote.project}</TagChip>
+            <TagChip tone="project" projectTheme={projectTheme}>
+              {meetingNote.project}
+            </TagChip>
             {meetingNote.tags.map((tag) => (
               <TagChip key={tag}>#{tag}</TagChip>
             ))}
@@ -799,7 +816,10 @@ function MeetingNotesList({
   onOpenUploadDialog,
   onOpenCreateChooser,
   projects,
+  projectThemeMap,
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const filteredMeetingNotes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -825,9 +845,31 @@ function MeetingNotesList({
     });
   }, [meetingNotes, query, selectedProject]);
 
-  const visibleMeetingNotes = filteredMeetingNotes.slice(0, PAGE_SIZE);
-  const visibleStart = visibleMeetingNotes.length > 0 ? 1 : 0;
-  const visibleEnd = visibleMeetingNotes.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredMeetingNotes.length / PAGE_SIZE),
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedProject]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const visibleMeetingNotes = filteredMeetingNotes.slice(
+    startIndex,
+    startIndex + PAGE_SIZE,
+  );
+  const visibleStart = visibleMeetingNotes.length > 0 ? startIndex + 1 : 0;
+  const visibleEnd = startIndex + visibleMeetingNotes.length;
+  const pageNumbers = Array.from({ length: totalPages }, (_value, index) => {
+    return index + 1;
+  });
 
   return (
     <section className="space-y-6">
@@ -890,7 +932,11 @@ function MeetingNotesList({
       {visibleMeetingNotes.length > 0 ? (
         <div className="space-y-4">
           {visibleMeetingNotes.map((meetingNote) => (
-            <MeetingNoteCard key={meetingNote.id} meetingNote={meetingNote} />
+            <MeetingNoteCard
+              key={meetingNote.id}
+              meetingNote={meetingNote}
+              projectTheme={projectThemeMap[meetingNote.project]}
+            />
           ))}
         </div>
       ) : (
@@ -903,12 +949,59 @@ function MeetingNotesList({
           </p>
         </section>
       )}
+
+      {totalPages > 1 ? (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+            className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] border border-slate-300 bg-white text-[#3A3A3A] transition hover:border-[#3A3A3A] hover:bg-slate-50 hover:text-[#000000] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="이전 페이지"
+          >
+            <ChevronLeftIcon />
+          </button>
+
+          {pageNumbers.map((pageNumber) => {
+            const isActive = pageNumber === currentPage;
+
+            return (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => setCurrentPage(pageNumber)}
+                className={`inline-flex h-14 min-w-[56px] items-center justify-center rounded-[18px] border text-lg font-semibold transition ${
+                  isActive
+                    ? "border-[#3A3A3A] bg-[#3A3A3A] text-white shadow-[0_16px_30px_-22px_rgba(58,58,58,0.9)]"
+                    : "border-slate-300 bg-white text-[#3A3A3A] hover:border-[#3A3A3A] hover:bg-slate-50 hover:text-[#000000]"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
+            disabled={currentPage === totalPages}
+            className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] border border-slate-300 bg-white text-[#3A3A3A] transition hover:border-[#3A3A3A] hover:bg-slate-50 hover:text-[#000000] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="다음 페이지"
+          >
+            <ChevronRightIcon />
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function MeetingNotesDetail({
   meetingNote,
+  projectTheme,
   onOpenEdit,
   onDownload,
   onDelete,
@@ -935,7 +1028,9 @@ function MeetingNotesDetail({
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <TagChip tone="project">{meetingNote.project}</TagChip>
+              <TagChip tone="project" projectTheme={projectTheme}>
+                {meetingNote.project}
+              </TagChip>
               {meetingNote.tags.map((tag) => (
                 <TagChip key={tag}>#{tag}</TagChip>
               ))}
@@ -1040,6 +1135,14 @@ function MeetingNotesPage() {
           ) ?? null)
         : null,
     [meetingNoteId, meetingNotes],
+  );
+
+  const projectThemeMap = getProjectWorkspace().projects.reduce(
+    (themeByProjectName, project) => {
+      themeByProjectName[project.name] = getProjectTheme(project.colorKey);
+      return themeByProjectName;
+    },
+    {},
   );
 
   const defaultProject =
@@ -1431,6 +1534,7 @@ function MeetingNotesPage() {
         activeMeetingNote ? (
           <MeetingNotesDetail
             meetingNote={activeMeetingNote}
+            projectTheme={projectThemeMap[activeMeetingNote.project]}
             onOpenEdit={() =>
               setFormDialog({
                 open: true,
@@ -1489,6 +1593,7 @@ function MeetingNotesPage() {
             })
           }
           projects={projects}
+          projectThemeMap={projectThemeMap}
         />
       )}
 

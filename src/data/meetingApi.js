@@ -1,4 +1,8 @@
+import { getProjectWorkspace } from './projectApi';
+
 const MEETING_NOTES_STORAGE_KEY = 'record-meeting-notes';
+const MEETING_NOTES_STORAGE_VERSION_KEY = 'record-meeting-notes-version';
+const DEFAULT_MEETING_NOTES_VERSION = 2;
 const MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024;
 const SUPPORTED_AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a'];
 
@@ -326,6 +330,121 @@ const DEFAULT_MEETING_NOTES = [
   },
 ];
 
+const PAGINATION_SHOWCASE_MEETING_NOTES = [
+  {
+    id: 'meeting-13',
+    project: 'AI 챗봇 프로젝트',
+    title: 'AI 챗봇 요구사항 분석',
+    date: '2026-04-12',
+    durationMinutes: 60,
+    participants: ['김도윤', '박서연'],
+    summary:
+      'AI 챗봇 프로젝트의 기능 요구사항을 분석하고 기술 스택을 결정했습니다.',
+    tags: ['AI', '기획'],
+    transcript:
+      '이번 회의에서는 AI 챗봇 프로젝트의 핵심 기능 범위를 먼저 정리했습니다.\n' +
+      '사용자 질문 분류, 답변 생성 흐름, 관리자 대시보드 필요 여부를 중심으로 우선순위를 정했고 React와 Python 기반 구조를 사용하기로 결정했습니다.\n' +
+      '다음 단계에서는 데이터 수집 범위와 MVP 화면 구성을 구체화하기로 했습니다.',
+    keyPoints: [
+      '챗봇 MVP 기능 범위 정의',
+      '프론트엔드와 백엔드 기술 스택 합의',
+      '관리자 화면은 2차 범위로 분리',
+    ],
+    actionItems: [
+      '기능 요구사항 문서 초안 정리 (담당: 김도윤)',
+      '챗봇 흐름도 와이어프레임 작성 (담당: 박서연)',
+    ],
+    sourceType: 'manual',
+    audioFileName: '',
+    createdAt: '2026-04-12T04:00:00.000Z',
+    updatedAt: '2026-04-12T04:00:00.000Z',
+  },
+  {
+    id: 'meeting-14',
+    project: '모바일 앱 개발',
+    title: '모바일 앱 디자인 킥오프',
+    date: '2026-04-11',
+    durationMinutes: 90,
+    participants: ['이서연', '최하늘', '정민지'],
+    summary:
+      '모바일 앱의 디자인 방향성과 주요 화면을 논의했습니다.',
+    tags: ['디자인', '모바일'],
+    transcript:
+      '킥오프 회의에서 온보딩, 홈, 일정, 회의록 화면을 중심으로 초기 경험을 정리했습니다.\n' +
+      '모바일 앱은 밝은 톤과 빠른 입력 흐름을 유지하고, 프로젝트별 색상을 주요 배지와 카드에 반영하기로 합의했습니다.\n' +
+      '다음 스프린트에서는 핵심 화면 시안을 먼저 검토하기로 했습니다.',
+    keyPoints: [
+      '핵심 모바일 화면 우선순위 정리',
+      '프로젝트 색상 연동 방향 합의',
+      '입력 플로우 단순화 필요 확인',
+    ],
+    actionItems: [
+      '핵심 화면 시안 3종 제작 (담당: 이서연)',
+      '모바일 컴포넌트 구조 정리 (담당: 정민지)',
+    ],
+    sourceType: 'manual',
+    audioFileName: '',
+    createdAt: '2026-04-11T02:30:00.000Z',
+    updatedAt: '2026-04-11T02:30:00.000Z',
+  },
+  {
+    id: 'meeting-15',
+    project: 'AI 챗봇 프로젝트',
+    title: 'NLP 모델 선정 회의',
+    date: '2026-04-04',
+    durationMinutes: 90,
+    participants: ['김도윤', '최하늘', '박서연'],
+    summary:
+      'AI 챗봇에 사용할 NLP 모델을 비교 분석하고 최종 선정했습니다.',
+    tags: ['AI', 'NLP'],
+    transcript:
+      '회의에서는 응답 정확도, 추론 속도, 운영 비용을 기준으로 후보 모델을 비교했습니다.\n' +
+      '초기 버전은 경량 모델과 검색 기반 보강 구조를 함께 사용하고, 이후 실제 문의 데이터를 바탕으로 고도화하기로 했습니다.\n' +
+      '평가 항목과 테스트 질문 세트도 함께 정리했습니다.',
+    keyPoints: [
+      '후보 NLP 모델 비교 기준 수립',
+      '초기 버전은 경량 모델 중심으로 진행',
+      '평가용 질문 세트 작성 필요',
+    ],
+    actionItems: [
+      '모델 비교표 정리 및 공유 (담당: 최하늘)',
+      '테스트 질문 세트 20개 작성 (담당: 박서연)',
+    ],
+    sourceType: 'manual',
+    audioFileName: '',
+    createdAt: '2026-04-04T06:10:00.000Z',
+    updatedAt: '2026-04-04T06:10:00.000Z',
+  },
+  {
+    id: 'meeting-16',
+    project: '모바일 앱 개발',
+    title: 'Flutter 위젯 설계',
+    date: '2026-04-03',
+    durationMinutes: 70,
+    participants: ['이서연', '정민지'],
+    summary:
+      '모바일 앱의 주요 위젯과 컴포넌트 구조를 설계했습니다.',
+    tags: ['Flutter', '위젯'],
+    transcript:
+      '이번 회의에서는 카드, 배지, 입력 폼, 하단 네비게이션 위젯 구조를 나눠 설계했습니다.\n' +
+      '공통 위젯으로 묶을 요소와 화면 전용 컴포넌트를 구분하고, 상태 변화에 따라 색상이 자연스럽게 이어지도록 구현 방향을 정리했습니다.\n' +
+      '다음 작업으로는 실제 화면에 시범 적용해보는 것으로 합의했습니다.',
+    keyPoints: [
+      '공통 위젯과 화면 전용 컴포넌트 분리',
+      '프로젝트 색상 상태 변화 구조 검토',
+      '시범 화면 적용 우선 진행',
+    ],
+    actionItems: [
+      '공통 위젯 목록 문서화 (담당: 정민지)',
+      '시범 화면에 위젯 적용 (담당: 이서연)',
+    ],
+    sourceType: 'manual',
+    audioFileName: '',
+    createdAt: '2026-04-03T01:20:00.000Z',
+    updatedAt: '2026-04-03T01:20:00.000Z',
+  },
+];
+
 function wait(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -374,7 +493,49 @@ function normalizeStoredMeetingNote(note) {
 }
 
 function buildStorageFallback() {
-  return sortMeetingNotes(cloneData(DEFAULT_MEETING_NOTES).map(normalizeStoredMeetingNote));
+  return sortMeetingNotes(
+    cloneData([
+      ...DEFAULT_MEETING_NOTES,
+      ...PAGINATION_SHOWCASE_MEETING_NOTES,
+    ]).map(normalizeStoredMeetingNote),
+  );
+}
+
+function buildPaginationShowcaseMeetingNotes() {
+  return cloneData(PAGINATION_SHOWCASE_MEETING_NOTES).map(
+    normalizeStoredMeetingNote,
+  );
+}
+
+function migrateMeetingNotes(notes) {
+  if (!hasWindow()) {
+    return sortMeetingNotes(notes);
+  }
+
+  const storedVersion = Number(
+    window.localStorage.getItem(MEETING_NOTES_STORAGE_VERSION_KEY) ?? 1,
+  );
+
+  if (storedVersion >= DEFAULT_MEETING_NOTES_VERSION) {
+    return sortMeetingNotes(notes);
+  }
+
+  const existingIds = new Set(notes.map((note) => note.id));
+  const missingShowcaseNotes = buildPaginationShowcaseMeetingNotes().filter(
+    (note) => !existingIds.has(note.id),
+  );
+  const migratedNotes = sortMeetingNotes([...missingShowcaseNotes, ...notes]);
+
+  window.localStorage.setItem(
+    MEETING_NOTES_STORAGE_VERSION_KEY,
+    String(DEFAULT_MEETING_NOTES_VERSION),
+  );
+  window.localStorage.setItem(
+    MEETING_NOTES_STORAGE_KEY,
+    JSON.stringify(migratedNotes),
+  );
+
+  return migratedNotes;
 }
 
 function readMeetingNotes() {
@@ -387,14 +548,24 @@ function readMeetingNotes() {
   if (!storedValue) {
     const seeded = buildStorageFallback();
     window.localStorage.setItem(MEETING_NOTES_STORAGE_KEY, JSON.stringify(seeded));
+    window.localStorage.setItem(
+      MEETING_NOTES_STORAGE_VERSION_KEY,
+      String(DEFAULT_MEETING_NOTES_VERSION),
+    );
     return seeded;
   }
 
   try {
-    return sortMeetingNotes(JSON.parse(storedValue).map(normalizeStoredMeetingNote));
+    return migrateMeetingNotes(
+      sortMeetingNotes(JSON.parse(storedValue).map(normalizeStoredMeetingNote)),
+    );
   } catch (error) {
     const seeded = buildStorageFallback();
     window.localStorage.setItem(MEETING_NOTES_STORAGE_KEY, JSON.stringify(seeded));
+    window.localStorage.setItem(
+      MEETING_NOTES_STORAGE_VERSION_KEY,
+      String(DEFAULT_MEETING_NOTES_VERSION),
+    );
     return seeded;
   }
 }
@@ -410,8 +581,17 @@ function writeMeetingNotes(notes) {
   );
 }
 
+function getKnownProjectNames() {
+  return getProjectWorkspace()
+    .projects.map((project) => project.name?.trim())
+    .filter(Boolean);
+}
+
 function buildProjectOptions(notes) {
-  const uniqueProjects = new Set(BASE_PROJECT_OPTIONS);
+  const uniqueProjects = new Set([
+    ...BASE_PROJECT_OPTIONS,
+    ...getKnownProjectNames(),
+  ]);
 
   notes.forEach((note) => {
     if (note.project) {

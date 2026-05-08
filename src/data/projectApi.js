@@ -49,6 +49,10 @@ export const PROJECT_COLOR_THEMES = {
   },
 };
 
+export const PROJECT_COLOR_CHOICES = Object.keys(PROJECT_COLOR_THEMES);
+
+const PROJECT_WORKSPACE_STORAGE_KEY = 'record-project-workspace';
+
 export const PROJECT_STATUS_META = {
   inProgress: {
     label: '진행중',
@@ -365,7 +369,13 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function getProjectWorkspace() {
+function hasWindow() {
+  return (
+    typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+  );
+}
+
+function buildDefaultProjectWorkspace() {
   return cloneData({
     projects,
     meetingNotes,
@@ -373,4 +383,83 @@ export function getProjectWorkspace() {
     schedules,
     portfolios,
   });
+}
+
+function normalizeProjectWorkspace(workspace) {
+  const defaultWorkspace = buildDefaultProjectWorkspace();
+
+  return {
+    projects: Array.isArray(workspace?.projects)
+      ? workspace.projects
+      : defaultWorkspace.projects,
+    meetingNotes: Array.isArray(workspace?.meetingNotes)
+      ? workspace.meetingNotes
+      : defaultWorkspace.meetingNotes,
+    todos: Array.isArray(workspace?.todos)
+      ? workspace.todos
+      : defaultWorkspace.todos,
+    schedules: Array.isArray(workspace?.schedules)
+      ? workspace.schedules
+      : defaultWorkspace.schedules,
+    portfolios: Array.isArray(workspace?.portfolios)
+      ? workspace.portfolios
+      : defaultWorkspace.portfolios,
+  };
+}
+
+function readProjectWorkspace() {
+  if (!hasWindow()) {
+    return buildDefaultProjectWorkspace();
+  }
+
+  const storedValue = window.localStorage.getItem(PROJECT_WORKSPACE_STORAGE_KEY);
+
+  if (!storedValue) {
+    const seededWorkspace = buildDefaultProjectWorkspace();
+    window.localStorage.setItem(
+      PROJECT_WORKSPACE_STORAGE_KEY,
+      JSON.stringify(seededWorkspace),
+    );
+    return seededWorkspace;
+  }
+
+  try {
+    return normalizeProjectWorkspace(JSON.parse(storedValue));
+  } catch (error) {
+    const seededWorkspace = buildDefaultProjectWorkspace();
+    window.localStorage.setItem(
+      PROJECT_WORKSPACE_STORAGE_KEY,
+      JSON.stringify(seededWorkspace),
+    );
+    return seededWorkspace;
+  }
+}
+
+export function getProjectWorkspace() {
+  return readProjectWorkspace();
+}
+
+export function saveProjectWorkspace(workspace) {
+  const normalizedWorkspace = normalizeProjectWorkspace(workspace);
+
+  if (hasWindow()) {
+    window.localStorage.setItem(
+      PROJECT_WORKSPACE_STORAGE_KEY,
+      JSON.stringify(normalizedWorkspace),
+    );
+  }
+
+  return cloneData(normalizedWorkspace);
+}
+
+export function getProjectTheme(colorKey) {
+  return PROJECT_COLOR_THEMES[colorKey] ?? PROJECT_COLOR_THEMES.green;
+}
+
+export function getProjectThemeByName(projectName) {
+  const matchedProject = getProjectWorkspace().projects.find(
+    (project) => project.name === projectName,
+  );
+
+  return getProjectTheme(matchedProject?.colorKey);
 }

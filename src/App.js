@@ -4,7 +4,6 @@ import CalendarPage from './pages/Calendar/CalendarPage';
 import LoginPage from './pages/LoginPage/LoginPage';
 import MainShell from './pages/MainShell/MainShell';
 import DashboardPage from './pages/MainShell/DashboardPage';
-import PlaceholderPage from './pages/MainShell/PlaceholderPage';
 import MeetingNotesPage from './pages/MeetingNotes/MeetingNotesPage';
 import ProjectPage from './pages/Project/ProjectPage';
 
