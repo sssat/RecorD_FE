@@ -74,6 +74,17 @@ function ChevronLeftIcon() {
   );
 }
 
+function ChevronDownIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5 fill-none stroke-current stroke-[1.8]"
+    >
+      <path d="m7 10 5 5 5-5" />
+    </svg>
+  );
+}
+
 function PencilIcon() {
   return (
     <svg
@@ -419,12 +430,17 @@ function Input({ className = "", ...props }) {
 
 function Select({ className = "", children, ...props }) {
   return (
-    <select
-      {...props}
-      className={`w-full rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-base text-slate-700 outline-none transition focus:border-[#67b6a7] focus:bg-white focus:ring-4 focus:ring-[#d8f2eb] ${className}`}
-    >
-      {children}
-    </select>
+    <div className="relative">
+      <select
+        {...props}
+        className={`w-full appearance-none rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-base text-slate-700 outline-none transition focus:border-[#67b6a7] focus:bg-white focus:ring-4 focus:ring-[#d8f2eb] ${className}`}
+      >
+        {children}
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+        <ChevronDownIcon />
+      </span>
+    </div>
   );
 }
 
