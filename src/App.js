@@ -17,15 +17,6 @@ function App() {
           <Route path="records" element={<MeetingNotesPage />} />
           <Route path="records/:meetingNoteId" element={<MeetingNotesPage />} />
           <Route path="calendar" element={<CalendarPage />} />
-          <Route
-            path="projects"
-            element={
-              <PlaceholderPage
-                title="프로젝트"
-                description="프로젝트별 회의록과 할 일, 진행 상태를 한 번에 관리할 수 있도록 준비 중입니다."
-              />
-            }
-          />
           <Route path="projects" element={<ProjectPage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
