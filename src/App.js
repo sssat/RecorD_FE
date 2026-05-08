@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import KakaoCallback from './pages/KakaoCallback/KakaoCallback';
-import LoginPage from './pages/LoginPage/LoginPage';
 import CalendarPage from './pages/Calendar/CalendarPage';
-import DashboardPage from './pages/MainShell/DashboardPage';
+import LoginPage from './pages/LoginPage/LoginPage';
 import MainShell from './pages/MainShell/MainShell';
+import DashboardPage from './pages/MainShell/DashboardPage';
 import PlaceholderPage from './pages/MainShell/PlaceholderPage';
+import MeetingNotesPage from './pages/MeetingNotes/MeetingNotesPage';
 import ProjectPage from './pages/Project/ProjectPage';
 
 function App() {
@@ -13,16 +14,18 @@ function App() {
       <Routes>
         <Route path="/" element={<MainShell />}>
           <Route index element={<DashboardPage />} />
+          <Route path="records" element={<MeetingNotesPage />} />
+          <Route path="records/:meetingNoteId" element={<MeetingNotesPage />} />
+          <Route path="calendar" element={<CalendarPage />} />
           <Route
-            path="records"
+            path="projects"
             element={
               <PlaceholderPage
-                title="회의록"
-                description="회의 내용을 정리하고 공유하는 공간을 준비 중입니다."
+                title="프로젝트"
+                description="프로젝트별 회의록과 할 일, 진행 상태를 한 번에 관리할 수 있도록 준비 중입니다."
               />
             }
           />
-          <Route path="calendar" element={<CalendarPage />} />
           <Route path="projects" element={<ProjectPage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
