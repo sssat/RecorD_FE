@@ -7,7 +7,6 @@ import {
   combineDateAndTime,
   formatEventDateRange,
   formatMonthTitle,
-  formatReadableDate,
   getTodoBadgeToneClassName,
   formatTodoDate,
   getEventColorByType,
@@ -545,6 +544,14 @@ function CalendarPage() {
     setTodoDialog(null);
   };
 
+  const deleteTodo = (todoId) => {
+    setCalendarState((currentState) => ({
+      ...currentState,
+      todos: currentState.todos.filter((todo) => todo.id !== todoId),
+    }));
+    setTodoDialog(null);
+  };
+
   const handleSubmitEvent = (formValues) => {
     setCalendarState((currentState) => {
       const startDateValue = formValues.startDate || toInputDateValue(selectedDate);
@@ -1013,6 +1020,11 @@ function CalendarPage() {
           mode={todoDialog.mode}
           initialValues={buildTodoFormInitialValues(selectedDate, editingTodo)}
           onClose={() => setTodoDialog(null)}
+          onDelete={
+            todoDialog.mode === "edit" && editingTodo
+              ? () => deleteTodo(editingTodo.id)
+              : undefined
+          }
           onSubmit={handleSubmitTodo}
         />
       ) : null}

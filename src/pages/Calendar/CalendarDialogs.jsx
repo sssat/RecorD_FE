@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
   EVENT_COLOR_OPTIONS,
   EVENT_THEMES,
@@ -8,7 +8,7 @@ import {
   formatEventFullDateLabel,
   formatEventTimeRange,
   hasEventTime,
-} from './calendarData';
+} from "./calendarData";
 
 function CloseIcon() {
   return (
@@ -76,7 +76,7 @@ function SelectArrowIcon({ open = false }) {
     <svg
       viewBox="0 0 24 24"
       className={`h-5 w-5 fill-none stroke-current stroke-[2] transition ${
-        open ? 'rotate-180' : ''
+        open ? "rotate-180" : ""
       }`}
     >
       <path d="m7 10 5 5 5-5" />
@@ -84,7 +84,7 @@ function SelectArrowIcon({ open = false }) {
   );
 }
 
-function DialogShell({ maxWidth = 'max-w-[640px]', onClose, children }) {
+function DialogShell({ maxWidth = "max-w-[640px]", onClose, children }) {
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/45 px-4 py-4 sm:px-6 sm:py-8"
@@ -136,7 +136,7 @@ function FormField({ label, optional = false, children }) {
     <div className="block">
       <span className="mb-3 block text-base font-medium text-slate-900">
         {label}
-        {optional ? ' (선택)' : ''}
+        {optional ? " (선택)" : ""}
       </span>
       {children}
     </div>
@@ -166,7 +166,7 @@ function openNativePicker(input) {
     return;
   }
 
-  if (typeof input.showPicker === 'function') {
+  if (typeof input.showPicker === "function") {
     try {
       input.showPicker();
       return;
@@ -180,7 +180,7 @@ function openNativePicker(input) {
 
 function PickerField({ type, ariaLabel, ...props }) {
   const inputRef = useRef(null);
-  const icon = type === 'time' ? <ClockIcon /> : <CalendarIcon />;
+  const icon = type === "time" ? <ClockIcon /> : <CalendarIcon />;
 
   return (
     <div className="flex items-center gap-3 rounded-[28px] border border-slate-100 bg-[#f7f8fc] px-6 py-5 transition focus-within:border-[#767676] focus-within:bg-white">
@@ -228,10 +228,10 @@ function FieldSelect({ value, options, onChange, placeholder }) {
       }
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener("mousedown", handlePointerDown);
 
     return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
 
@@ -245,8 +245,8 @@ function FieldSelect({ value, options, onChange, placeholder }) {
         onClick={() => setIsOpen((currentState) => !currentState)}
         className={`dialog-field-select-trigger flex w-full items-center justify-between rounded-[28px] border px-6 py-5 text-left text-lg text-slate-900 transition ${
           isOpen
-            ? 'border-[#767676] bg-white shadow-[0_20px_40px_-30px_rgba(58,58,58,0.35)]'
-            : 'border-slate-100 bg-[#f7f8fc] hover:border-slate-200'
+            ? "border-[#767676] bg-white shadow-[0_20px_40px_-30px_rgba(58,58,58,0.35)]"
+            : "border-slate-100 bg-[#f7f8fc] hover:border-slate-200"
         }`}
       >
         <span>{selectedOption?.label ?? placeholder}</span>
@@ -271,8 +271,8 @@ function FieldSelect({ value, options, onChange, placeholder }) {
                   }}
                   className={`flex w-full items-center justify-between rounded-[22px] px-4 py-3 text-left text-lg transition ${
                     isSelected
-                      ? 'bg-[#EFEFEF] text-slate-900'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? "bg-[#EFEFEF] text-slate-900"
+                      : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <span>{option.label}</span>
@@ -305,8 +305,8 @@ function EventColorPicker({ value, onChange }) {
             onClick={() => onChange(option.value)}
             className={`flex items-center gap-4 rounded-[24px] border px-4 py-4 text-left transition ${
               isSelected
-                ? 'border-slate-900 ring-2 ring-slate-200'
-                : 'border-slate-200 hover:border-slate-300'
+                ? "border-slate-900 ring-2 ring-slate-200"
+                : "border-slate-200 hover:border-slate-300"
             } ${theme.card}`}
           >
             <span
@@ -342,11 +342,11 @@ function SecondaryButton({ children, ...props }) {
   );
 }
 
-function PrimaryButton({ children, tone = 'primary', ...props }) {
+function PrimaryButton({ children, tone = "primary", ...props }) {
   const toneClassName =
-    tone === 'danger'
-      ? 'bg-white text-[#CC3F41] ring-1 ring-[#FFC1C1] hover:bg-[#FFE0E0]'
-      : 'bg-[#3A3A3A] text-white hover:bg-[#000000]';
+    tone === "danger"
+      ? "bg-white text-[#CC3F41] ring-1 ring-[#FFC1C1] hover:bg-[#FFE0E0]"
+      : "bg-[#3A3A3A] text-white hover:bg-[#000000]";
 
   return (
     <button
@@ -358,12 +358,47 @@ function PrimaryButton({ children, tone = 'primary', ...props }) {
   );
 }
 
+function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  onCancel,
+  onConfirm,
+}) {
+  return (
+    <DialogShell maxWidth="max-w-[560px]" onClose={onCancel}>
+      <div className="px-6 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-8">
+        <h3 className="text-[2rem] font-black tracking-tight text-slate-900">
+          {title}
+        </h3>
+        <p className="mt-5 text-xl leading-8 text-slate-400">{description}</p>
+
+        <div className="mt-8 flex gap-4">
+          <SecondaryButton type="button" onClick={onCancel}>
+            취소
+          </SecondaryButton>
+          <PrimaryButton type="button" tone="danger" onClick={onConfirm}>
+            {confirmLabel}
+          </PrimaryButton>
+        </div>
+      </div>
+    </DialogShell>
+  );
+}
+
 function toProjectOption(projectName) {
   return { value: projectName, label: projectName };
 }
 
-export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
+export function TodoFormDialog({
+  mode,
+  initialValues,
+  onClose,
+  onSubmit,
+  onDelete,
+}) {
   const [formState, setFormState] = useState(initialValues);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const setFieldValue = (fieldName, nextValue) => {
     setFormState((currentState) => ({
@@ -389,13 +424,22 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
   return (
     <DialogShell onClose={onClose}>
       <FormLayout
-        title={mode === 'edit' ? '할 일 수정' : '새 할 일'}
+        title={mode === "edit" ? "할 일 수정" : "새 할 일"}
         onClose={onClose}
         footer={
           <div className="flex gap-4">
             <SecondaryButton type="button" onClick={onClose}>
               취소
             </SecondaryButton>
+            {mode === "edit" && typeof onDelete === "function" ? (
+              <PrimaryButton
+                type="button"
+                tone="danger"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+              >
+                삭제
+              </PrimaryButton>
+            ) : null}
             <PrimaryButton type="submit" form="todo-form">
               확인
             </PrimaryButton>
@@ -406,7 +450,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
           <FormField label="제목">
             <FieldInput
               value={formState.title}
-              onChange={(event) => setFieldValue('title', event.target.value)}
+              onChange={(event) => setFieldValue("title", event.target.value)}
               placeholder="할 일을 입력해 주세요"
             />
           </FormField>
@@ -415,7 +459,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldSelect
               value={formState.priority}
               options={TODO_PRIORITY_OPTIONS}
-              onChange={(nextValue) => setFieldValue('priority', nextValue)}
+              onChange={(nextValue) => setFieldValue("priority", nextValue)}
               placeholder="우선순위를 선택해 주세요"
             />
           </FormField>
@@ -424,7 +468,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <PickerField
               type="date"
               value={formState.date}
-              onChange={(event) => setFieldValue('date', event.target.value)}
+              onChange={(event) => setFieldValue("date", event.target.value)}
               ariaLabel="마감일 선택"
             />
           </FormField>
@@ -433,7 +477,7 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldTextarea
               value={formState.description}
               onChange={(event) =>
-                setFieldValue('description', event.target.value)
+                setFieldValue("description", event.target.value)
               }
               placeholder="할 일에 대한 설명을 입력해 주세요"
             />
@@ -443,12 +487,22 @@ export function TodoFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldSelect
               value={formState.project}
               options={PROJECT_OPTIONS.map(toProjectOption)}
-              onChange={(nextValue) => setFieldValue('project', nextValue)}
+              onChange={(nextValue) => setFieldValue("project", nextValue)}
               placeholder="프로젝트를 선택해 주세요"
             />
           </FormField>
         </form>
       </FormLayout>
+
+      {isDeleteConfirmOpen && typeof onDelete === "function" ? (
+        <ConfirmDialog
+          title="할 일 삭제"
+          description="정말로 이 할 일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="삭제"
+          onCancel={() => setIsDeleteConfirmOpen(false)}
+          onConfirm={onDelete}
+        />
+      ) : null}
     </DialogShell>
   );
 }
@@ -464,7 +518,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
       };
 
       if (
-        fieldName === 'startDate' &&
+        fieldName === "startDate" &&
         currentState.endDate &&
         currentState.endDate < nextValue
       ) {
@@ -472,7 +526,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
       }
 
       if (
-        fieldName === 'endDate' &&
+        fieldName === "endDate" &&
         currentState.startDate &&
         nextValue &&
         nextValue < currentState.startDate
@@ -498,8 +552,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
       !formState.title.trim() ||
       !formState.startDate ||
       !formState.endDate ||
-      (formState.hasTime &&
-        (!formState.startTime || !formState.endTime))
+      (formState.hasTime && (!formState.startTime || !formState.endTime))
     ) {
       return;
     }
@@ -515,7 +568,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
   return (
     <DialogShell onClose={onClose}>
       <FormLayout
-        title={mode === 'edit' ? '일정 수정' : '새 일정'}
+        title={mode === "edit" ? "일정 수정" : "새 일정"}
         onClose={onClose}
         footer={
           <div className="flex gap-4">
@@ -532,7 +585,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
           <FormField label="제목">
             <FieldInput
               value={formState.title}
-              onChange={(event) => setFieldValue('title', event.target.value)}
+              onChange={(event) => setFieldValue("title", event.target.value)}
               placeholder="일정 제목"
             />
           </FormField>
@@ -543,7 +596,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
                 type="date"
                 value={formState.startDate}
                 onChange={(event) =>
-                  setFieldValue('startDate', event.target.value)
+                  setFieldValue("startDate", event.target.value)
                 }
                 ariaLabel="시작일 선택"
               />
@@ -555,7 +608,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
                 min={formState.startDate || undefined}
                 value={formState.endDate}
                 onChange={(event) =>
-                  setFieldValue('endDate', event.target.value)
+                  setFieldValue("endDate", event.target.value)
                 }
                 ariaLabel="종료일 선택"
               />
@@ -574,12 +627,12 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
                   aria-checked={formState.hasTime}
                   onClick={toggleTime}
                   className={`relative h-8 w-14 rounded-full transition ${
-                    formState.hasTime ? 'bg-[#3A3A3A]' : 'bg-slate-300'
+                    formState.hasTime ? "bg-[#3A3A3A]" : "bg-slate-300"
                   }`}
                 >
                   <span
                     className={`absolute top-1 h-6 w-6 rounded-full bg-white transition ${
-                      formState.hasTime ? 'left-7' : 'left-1'
+                      formState.hasTime ? "left-7" : "left-1"
                     }`}
                   />
                 </button>
@@ -591,7 +644,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
                     label="시작 시간"
                     value={formState.startTime}
                     onChange={(event) =>
-                      setFieldValue('startTime', event.target.value)
+                      setFieldValue("startTime", event.target.value)
                     }
                     ariaLabel="시작 시간 입력"
                   />
@@ -599,7 +652,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
                     label="종료 시간"
                     value={formState.endTime}
                     onChange={(event) =>
-                      setFieldValue('endTime', event.target.value)
+                      setFieldValue("endTime", event.target.value)
                     }
                     ariaLabel="종료 시간 입력"
                   />
@@ -612,7 +665,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldSelect
               value={formState.type}
               options={EVENT_TYPE_OPTIONS}
-              onChange={(nextValue) => setFieldValue('type', nextValue)}
+              onChange={(nextValue) => setFieldValue("type", nextValue)}
               placeholder="일정 유형을 선택해 주세요"
             />
           </FormField>
@@ -620,14 +673,16 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
           <FormField label="일정 색상">
             <EventColorPicker
               value={formState.color}
-              onChange={(nextValue) => setFieldValue('color', nextValue)}
+              onChange={(nextValue) => setFieldValue("color", nextValue)}
             />
           </FormField>
 
           <FormField label="장소" optional>
             <FieldInput
               value={formState.location}
-              onChange={(event) => setFieldValue('location', event.target.value)}
+              onChange={(event) =>
+                setFieldValue("location", event.target.value)
+              }
               placeholder="장소를 입력해 주세요"
             />
           </FormField>
@@ -636,7 +691,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldTextarea
               value={formState.description}
               onChange={(event) =>
-                setFieldValue('description', event.target.value)
+                setFieldValue("description", event.target.value)
               }
               placeholder="일정에 대한 설명을 입력해 주세요"
             />
@@ -646,7 +701,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
             <FieldSelect
               value={formState.project}
               options={PROJECT_OPTIONS.map(toProjectOption)}
-              onChange={(nextValue) => setFieldValue('project', nextValue)}
+              onChange={(nextValue) => setFieldValue("project", nextValue)}
               placeholder="프로젝트를 선택해 주세요"
             />
           </FormField>
