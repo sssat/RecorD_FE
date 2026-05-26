@@ -154,6 +154,10 @@ function persistToken(key, value) {
 
 function flattenErrorMessages(value, parentKey = "") {
   if (typeof value === "string") {
+    if (/<\/?[a-z][\s\S]*>/i.test(value)) {
+      return [];
+    }
+
     return [parentKey ? `${parentKey}: ${value}` : value];
   }
 

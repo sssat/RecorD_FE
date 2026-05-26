@@ -248,16 +248,26 @@ function getRelatedSchedules(project, workspace) {
 
 function getProjectMetrics(project, workspace) {
   const relatedTodos = getRelatedTodos(project, workspace);
+  const relatedSchedules = getRelatedSchedules(project, workspace);
 
   return {
     meetingCount: project.meetingIds.length,
     todoCount: project.todoIds.length,
     completedTodoCount: relatedTodos.filter((todo) => todo.completed).length,
     remainingTodoCount: relatedTodos.filter((todo) => !todo.completed).length,
+    scheduleCount: relatedSchedules.length,
     portfolioCount: workspace.portfolios.filter(
       (portfolio) => portfolio.projectId === project.id,
     ).length,
   };
+}
+
+function hasPortfolioGenerationSource(metrics) {
+  return (
+    metrics.meetingCount > 0 ||
+    metrics.todoCount > 0 ||
+    metrics.scheduleCount > 0
+  );
 }
 
 function ActionButton({ children, onClick, tone = "primary", className = "" }) {
@@ -483,7 +493,10 @@ function OverviewTab({ project, workspace }) {
                   회의록 {metrics.meetingCount}개
                 </span>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-                  완료 할 일 {metrics.completedTodoCount}개
+                  할 일 {metrics.todoCount}개
+                </span>
+                <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
+                  일정 {metrics.scheduleCount}개
                 </span>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
                   포트폴리오 {metrics.portfolioCount}개
@@ -600,8 +613,8 @@ function PortfolioList({
             STAR 포트폴리오 목록
           </h3>
           <p className="mt-3 text-lg leading-8 text-slate-400">
-            회의록과 완료된 할 일을 바탕으로 직접 작성하거나 AI 초안을 생성할 수
-            있습니다.
+            회의록, 할 일, 일정 중 하나를 바탕으로 직접 작성하거나 AI 초안을
+            생성할 수 있습니다.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -627,7 +640,10 @@ function PortfolioList({
             회의록 {metrics.meetingCount}개
           </span>
           <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
-            완료 할 일 {metrics.completedTodoCount}개
+            할 일 {metrics.todoCount}개
+          </span>
+          <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
+            일정 {metrics.scheduleCount}개
           </span>
           <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500">
             현재 포트폴리오 {portfolios.length}개
@@ -905,8 +921,7 @@ function AiGenerationDialog({
 }) {
   const theme = getProjectTheme(project.colorKey);
   const metrics = getProjectMetrics(project, workspace);
-  const canGenerate =
-    metrics.completedTodoCount > 0 || metrics.meetingCount > 0;
+  const canGenerate = hasPortfolioGenerationSource(metrics);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-8 backdrop-blur-[2px]">
@@ -942,9 +957,8 @@ function AiGenerationDialog({
                 AI가 데이터를 분석 중입니다...
               </p>
               <p className="mt-3 text-base leading-7 text-slate-600">
-                회의록 {metrics.meetingCount}개와 완료된 할 일{" "}
-                {metrics.completedTodoCount}개, 일정{" "}
-                {project.scheduleIds.length}개를 기반으로 {project.name}
+                회의록 {metrics.meetingCount}개, 할 일 {metrics.todoCount}개,
+                일정 {metrics.scheduleCount}개를 기반으로 {project.name}
                 경험을 STAR 포트폴리오로 정리합니다.
               </p>
             </div>
@@ -953,7 +967,7 @@ function AiGenerationDialog({
 
         {!canGenerate ? (
           <div className="mt-6 rounded-[24px] border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-700">
-            포트폴리오를 생성하려면 최소 1개 이상의 회의록 또는 완료된 할 일이
+            포트폴리오를 생성하려면 회의록, 할 일, 일정 중 최소 1개가
             필요합니다.
           </div>
         ) : null}
