@@ -93,7 +93,7 @@ function SettingsPage() {
 
       <section className="rounded-2xl border border-slate-100 bg-white p-7 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-2 mb-7">
-           <svg className="h-6 w-6 text-[#8dc63f]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+           <svg className="h-6 w-6 text-[#3A3A3A]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
            </svg>
            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">프로필</h2>
@@ -106,7 +106,7 @@ function SettingsPage() {
               type="text"
               value={profile.name} // nickname -> name 변경
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 bg-[#f8fafc] px-4 py-3.5 text-[15px] font-medium text-slate-800 focus:border-[#8dc63f] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#8dc63f] transition-colors"
+              className="w-full rounded-xl border border-slate-200 bg-[#f8fafc] px-4 py-3.5 text-[15px] font-medium text-slate-800 focus:border-[#3A3A3A] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#3A3A3A] transition-colors"
             />
             <p className="text-[13px] text-slate-400">카카오 계정의 닉네임이 변경됩니다</p>
           </div>
@@ -129,7 +129,7 @@ function SettingsPage() {
 
             <p className="text-[13px] text-slate-400 flex items-center gap-1.5">
               이메일은 카카오 계정 설정에서만 변경 가능합니다
-              <a href="https://accounts.kakao.com" target="_blank" rel="noreferrer" className="text-[#8dc63f] font-semibold hover:underline flex items-center">
+              <a href="https://accounts.kakao.com" target="_blank" rel="noreferrer" className="text-[#3A3A3A] font-semibold hover:text-[#000000] hover:underline flex items-center">
                 카카오 계정 설정
                 <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               </a>
@@ -138,7 +138,7 @@ function SettingsPage() {
 
           <button
             onClick={handleUpdateProfile}
-            className="mt-2 rounded-xl bg-[#8dc63f] text-white px-6 py-3 font-bold text-[15px] hover:bg-[#7bb034] transition-colors"
+            className="mt-2 rounded-xl bg-[#3A3A3A] text-white px-6 py-3 font-bold text-[15px] hover:bg-[#000000] transition-colors"
           >
             프로필 저장
           </button>
