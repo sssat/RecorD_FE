@@ -146,7 +146,10 @@ function persistToken(key, value) {
     return;
   }
 
-  window.localStorage.setItem(key, value);
+  const keys =
+    key === CANONICAL_REFRESH_TOKEN_KEY ? REFRESH_TOKEN_KEYS : ACCESS_TOKEN_KEYS;
+
+  keys.forEach((storageKey) => window.localStorage.setItem(storageKey, value));
 }
 
 function flattenErrorMessages(value, parentKey = "") {
@@ -222,13 +225,25 @@ async function refreshAccessToken() {
       },
     )
     .then((response) => {
-      const nextAccessToken = response.data?.access;
+      const nextAccessToken = findNestedValueByKeys(
+        response.data,
+        ACCESS_TOKEN_KEYS,
+      );
+      const nextRefreshToken = findNestedValueByKeys(
+        response.data,
+        REFRESH_TOKEN_KEYS,
+      );
 
       if (!nextAccessToken) {
         throw new Error("The refresh response did not include a new access token.");
       }
 
       persistToken(CANONICAL_ACCESS_TOKEN_KEY, nextAccessToken);
+
+      if (nextRefreshToken) {
+        persistToken(CANONICAL_REFRESH_TOKEN_KEY, nextRefreshToken);
+      }
+
       return nextAccessToken;
     })
     .catch((error) => {

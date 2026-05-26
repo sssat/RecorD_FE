@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { getAccessToken, getApiBaseUrl } from '../../utils/auth';
+import { apiClient } from '../../data/apiClient';
 
-const API_BASE_URL = getApiBaseUrl();
 const DASHBOARD_TODO_LIMIT = 4;
 
 const formatDateKey = (date) => {
@@ -70,9 +68,8 @@ const buildDashboardTask = (todo) => {
 const sortTasksByCompletion = (tasks) =>
   [...tasks].sort((a, b) => Number(a.isDone) - Number(b.isDone));
 
-const fetchTodosByStatus = async ({ headers, todayKey, status, pageSize }) => {
-  const response = await axios.get(`${API_BASE_URL}/api/todos/`, {
-    headers,
+const fetchTodosByStatus = async ({ todayKey, status, pageSize }) => {
+  const response = await apiClient.get('/api/todos/', {
     params: {
       due_date: todayKey,
       status,
@@ -84,9 +81,8 @@ const fetchTodosByStatus = async ({ headers, todayKey, status, pageSize }) => {
   return response.data.results.map(buildDashboardTask);
 };
 
-const fetchDashboardTasks = async (headers, todayKey) => {
+const fetchDashboardTasks = async (todayKey) => {
   const inProgressTasks = await fetchTodosByStatus({
-    headers,
     todayKey,
     status: 'in_progress',
     pageSize: DASHBOARD_TODO_LIMIT,
@@ -95,7 +91,6 @@ const fetchDashboardTasks = async (headers, todayKey) => {
   const doneTasks =
     remainingCount > 0
       ? await fetchTodosByStatus({
-          headers,
           todayKey,
           status: 'done',
           pageSize: remainingCount,
@@ -123,13 +118,10 @@ function DashboardPage() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const token = getAccessToken();
-      const headers = { Authorization: `Bearer ${token}` };
       const todayKey = formatDateKey(new Date());
 
       try {
-        const projectRes = await axios.get(`${API_BASE_URL}/api/projects/`, {
-          headers,
+        const projectRes = await apiClient.get('/api/projects/', {
           params: {
             page_size: 8,
           },
@@ -151,8 +143,7 @@ function DashboardPage() {
       }
 
       try {
-        const scheduleRes = await axios.get(`${API_BASE_URL}/api/schedules/`, {
-          headers,
+        const scheduleRes = await apiClient.get('/api/schedules/', {
           params: {
             start: todayKey,
             end: getTomorrowDateKey(),
@@ -180,7 +171,7 @@ function DashboardPage() {
       }
 
       try {
-        const dashboardTasks = await fetchDashboardTasks(headers, todayKey);
+        const dashboardTasks = await fetchDashboardTasks(todayKey);
         setTasks(dashboardTasks);
       } catch (error) {
         console.error('오늘 할 일 데이터를 불러오는데 실패했습니다.', error);
@@ -205,14 +196,9 @@ function DashboardPage() {
     });
 
     try {
-      const token = getAccessToken();
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.patch(`${API_BASE_URL}/api/todos/${id}/`,
-        { status: newStatus },
-        { headers }
-      );
+      await apiClient.patch(`/api/todos/${id}/`, { status: newStatus });
 
-      const refreshedTasks = await fetchDashboardTasks(headers, formatDateKey(new Date()));
+      const refreshedTasks = await fetchDashboardTasks(formatDateKey(new Date()));
       setTasks(refreshedTasks);
     } catch (error) {
       console.error('할 일 상태 업데이트 실패', error);

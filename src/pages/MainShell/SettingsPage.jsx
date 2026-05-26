@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   clearAuthStorage,
+  clearProfileNameOverride,
   fetchCurrentUserProfile,
   getStoredProfile,
   logoutFromServer,
@@ -59,6 +60,7 @@ function SettingsPage() {
     if (window.confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       try {
         await withdrawFromServer();
+        clearProfileNameOverride(profile.email);
         clearAuthStorage();
         alert('회원 탈퇴가 완료되었습니다.');
         navigate('/login');

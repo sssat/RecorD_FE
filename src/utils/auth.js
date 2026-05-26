@@ -3,12 +3,46 @@ import axios from 'axios';
 const DEFAULT_API_BASE_URL = 'https://port-0-recor-d-be-moibwvfm46c84723.sel3.cloudtype.app';
 const API_BASE_URL = (process.env.REACT_APP_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '');
 const PROFILE_STORAGE_KEY = 'userProfile';
+const PROFILE_NAME_OVERRIDES_STORAGE_KEY = 'profileNameOverrides';
+const ACCESS_TOKEN_STORAGE_KEYS = [
+  'token',
+  'record-access-token',
+  'recordAccessToken',
+  'accessToken',
+  'access_token',
+  'access',
+];
+const REFRESH_TOKEN_STORAGE_KEYS = [
+  'refreshToken',
+  'record-refresh-token',
+  'recordRefreshToken',
+  'refresh_token',
+  'refresh',
+];
 
 export const getApiBaseUrl = () => API_BASE_URL;
 
-export const getAccessToken = () => localStorage.getItem('token');
+const getStoredValue = (keys) =>
+  keys
+    .map((key) => localStorage.getItem(key))
+    .find((value) => typeof value === 'string' && value.trim().length > 0)
+    ?.trim() || '';
 
-export const getRefreshToken = () => localStorage.getItem('refreshToken');
+const setStoredValue = (keys, value) => {
+  if (!value) {
+    return;
+  }
+
+  keys.forEach((key) => localStorage.setItem(key, value));
+};
+
+const removeStoredValues = (keys) => {
+  keys.forEach((key) => localStorage.removeItem(key));
+};
+
+export const getAccessToken = () => getStoredValue(ACCESS_TOKEN_STORAGE_KEYS);
+
+export const getRefreshToken = () => getStoredValue(REFRESH_TOKEN_STORAGE_KEYS);
 
 export const isAuthenticated = () => Boolean(getAccessToken());
 
@@ -48,7 +82,7 @@ export const normalizeProfile = (data = {}) => {
 export const getStoredProfile = () => {
   try {
     const storedProfile = localStorage.getItem(PROFILE_STORAGE_KEY);
-    return storedProfile ? normalizeProfile(JSON.parse(storedProfile)) : { name: '', email: '' };
+    return storedProfile ? applyStoredNameOverride(normalizeProfile(JSON.parse(storedProfile))) : { name: '', email: '' };
   } catch (error) {
     console.error('저장된 프로필 정보를 읽지 못했습니다.', error);
     return { name: '', email: '' };
@@ -56,14 +90,64 @@ export const getStoredProfile = () => {
 };
 
 export const storeProfile = (profile) => {
-  const normalizedProfile = normalizeProfile(profile);
+  const normalizedProfile = applyStoredNameOverride(normalizeProfile(profile));
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(normalizedProfile));
   return normalizedProfile;
 };
 
+const getProfileNameOverrides = () => {
+  try {
+    const storedOverrides = localStorage.getItem(PROFILE_NAME_OVERRIDES_STORAGE_KEY);
+    return storedOverrides ? JSON.parse(storedOverrides) : {};
+  } catch (error) {
+    console.error('저장된 닉네임 정보를 읽지 못했습니다.', error);
+    return {};
+  }
+};
+
+const applyStoredNameOverride = (profile) => {
+  if (!profile.email) {
+    return profile;
+  }
+
+  const nameOverrides = getProfileNameOverrides();
+  const storedName = nameOverrides[profile.email];
+
+  return storedName ? { ...profile, name: storedName } : profile;
+};
+
+const storeProfileNameOverride = ({ email, name }) => {
+  if (!email || !name?.trim()) {
+    return;
+  }
+
+  const nameOverrides = getProfileNameOverrides();
+  localStorage.setItem(
+    PROFILE_NAME_OVERRIDES_STORAGE_KEY,
+    JSON.stringify({ ...nameOverrides, [email]: name.trim() })
+  );
+};
+
+export const clearProfileNameOverride = (email) => {
+  if (!email) {
+    localStorage.removeItem(PROFILE_NAME_OVERRIDES_STORAGE_KEY);
+    return;
+  }
+
+  const nameOverrides = getProfileNameOverrides();
+  delete nameOverrides[email];
+
+  if (Object.keys(nameOverrides).length === 0) {
+    localStorage.removeItem(PROFILE_NAME_OVERRIDES_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(PROFILE_NAME_OVERRIDES_STORAGE_KEY, JSON.stringify(nameOverrides));
+};
+
 export const clearAuthStorage = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
+  removeStoredValues(ACCESS_TOKEN_STORAGE_KEYS);
+  removeStoredValues(REFRESH_TOKEN_STORAGE_KEYS);
   localStorage.removeItem(PROFILE_STORAGE_KEY);
 };
 
@@ -100,11 +184,14 @@ export const updateCurrentUserProfile = async (profile) => {
   );
 
   const responseProfile = normalizeProfile(response.data);
-
-  return storeProfile({
-    name: responseProfile.name || profile.name,
+  const updatedProfile = {
+    name: profile.name,
     email: responseProfile.email || profile.email,
-  });
+  };
+
+  storeProfileNameOverride(updatedProfile);
+
+  return storeProfile(updatedProfile);
 };
 
 export const logoutFromServer = async () => {
@@ -148,11 +235,11 @@ export const storeAuthResponse = (data = {}) => {
     data.refresh_token;
 
   if (accessToken) {
-    localStorage.setItem('token', accessToken);
+    setStoredValue(ACCESS_TOKEN_STORAGE_KEYS, accessToken);
   }
 
   if (refreshToken) {
-    localStorage.setItem('refreshToken', refreshToken);
+    setStoredValue(REFRESH_TOKEN_STORAGE_KEYS, refreshToken);
   }
 
   const profile = normalizeProfile(data);
