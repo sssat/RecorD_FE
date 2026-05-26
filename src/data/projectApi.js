@@ -1,3 +1,5 @@
+import { apiClient, extractApiErrorMessage } from "./apiClient";
+
 export const PROJECT_COLOR_THEMES = {
   green: {
     name: '그린',
@@ -66,8 +68,7 @@ export const PROJECT_STATUS_META = {
   },
 };
 
-const PROJECT_WORKSPACE_STORAGE_KEY = 'record-project-workspace-v2';
-const LEGACY_PROJECT_WORKSPACE_STORAGE_KEY = 'record-project-workspace';
+const PROJECT_PAGE_SIZE = 100;
 
 const EMPTY_PROJECT_WORKSPACE = {
   projects: [],
@@ -77,18 +78,15 @@ const EMPTY_PROJECT_WORKSPACE = {
   portfolios: [],
 };
 
+const PROJECT_STATUS_VALUES = new Set(["inProgress", "completed", "planning"]);
+const PROJECT_COLOR_VALUES = new Set(Object.keys(PROJECT_COLOR_THEMES));
+
 function cloneData(value) {
   if (typeof structuredClone === 'function') {
     return structuredClone(value);
   }
 
   return JSON.parse(JSON.stringify(value));
-}
-
-function hasWindow() {
-  return (
-    typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
-  );
 }
 
 function buildDefaultProjectWorkspace() {
@@ -117,51 +115,480 @@ function normalizeProjectWorkspace(workspace) {
   };
 }
 
-function readProjectWorkspace() {
-  if (!hasWindow()) {
-    return buildDefaultProjectWorkspace();
+function pickFirstDefined(...values) {
+  return values.find((value) => value !== undefined && value !== null);
+}
+
+function toTrimmedString(value) {
+  if (typeof value === "string") {
+    return value.trim();
   }
 
-  window.localStorage.removeItem(LEGACY_PROJECT_WORKSPACE_STORAGE_KEY);
-
-  const storedValue = window.localStorage.getItem(PROJECT_WORKSPACE_STORAGE_KEY);
-
-  if (!storedValue) {
-    const emptyWorkspace = buildDefaultProjectWorkspace();
-    window.localStorage.setItem(
-      PROJECT_WORKSPACE_STORAGE_KEY,
-      JSON.stringify(emptyWorkspace),
-    );
-    return emptyWorkspace;
+  if (typeof value === "number") {
+    return String(value);
   }
 
-  try {
-    return normalizeProjectWorkspace(JSON.parse(storedValue));
-  } catch (error) {
-    const emptyWorkspace = buildDefaultProjectWorkspace();
-    window.localStorage.setItem(
-      PROJECT_WORKSPACE_STORAGE_KEY,
-      JSON.stringify(emptyWorkspace),
-    );
-    return emptyWorkspace;
+  return "";
+}
+
+function toIdString(value) {
+  const normalizedValue = pickFirstDefined(value, "");
+
+  return normalizedValue === "" || normalizedValue === null
+    ? ""
+    : String(normalizedValue);
+}
+
+function toApiId(value) {
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function normalizeIdList(value) {
+  return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
+}
+
+function toDateValue(value) {
+  return toTrimmedString(value).slice(0, 10);
+}
+
+function formatTime(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `${String(date.getHours()).padStart(2, "0")}:${String(
+    date.getMinutes(),
+  ).padStart(2, "0")}`;
+}
+
+function formatScheduleTimeLabel(rawSchedule) {
+  if (rawSchedule?.is_all_day) {
+    return "종일";
+  }
+
+  const startDate = new Date(rawSchedule?.start_datetime);
+  const endDate = new Date(rawSchedule?.end_datetime);
+  const startTime = formatTime(startDate);
+  const endTime = formatTime(endDate);
+
+  if (!startTime || !endTime) {
+    return "";
+  }
+
+  return `${startTime} - ${endTime}`;
+}
+
+function normalizeStringList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => toTrimmedString(item)).filter(Boolean);
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(value.includes("\n") ? "\n" : ",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeProjectStatus(value) {
+  return PROJECT_STATUS_VALUES.has(value) ? value : "inProgress";
+}
+
+function normalizeProjectColor(value) {
+  return PROJECT_COLOR_VALUES.has(value) ? value : "green";
+}
+
+function getPriorityLabel(priority) {
+  const labels = {
+    high: "우선순위 높음",
+    medium: "우선순위 보통",
+    low: "우선순위 낮음",
+  };
+
+  return labels[priority] ?? "우선순위 보통";
+}
+
+function normalizeProject(rawProject) {
+  return {
+    id: toIdString(rawProject?.id),
+    name: toTrimmedString(rawProject?.name),
+    description: toTrimmedString(rawProject?.description),
+    startDate: toDateValue(rawProject?.startDate),
+    endDate: toDateValue(rawProject?.endDate),
+    tags: normalizeStringList(rawProject?.tags),
+    status: normalizeProjectStatus(rawProject?.status),
+    colorKey: normalizeProjectColor(rawProject?.colorKey),
+    meetingIds: normalizeIdList(rawProject?.meetingIds),
+    todoIds: normalizeIdList(rawProject?.todoIds),
+    scheduleIds: normalizeIdList(rawProject?.scheduleIds),
+  };
+}
+
+function normalizeMeeting(rawMeeting) {
+  const sourceType = toTrimmedString(rawMeeting?.sourceType);
+
+  return {
+    id: toIdString(rawMeeting?.id),
+    projectId: toIdString(rawMeeting?.projectId),
+    project: toTrimmedString(rawMeeting?.project),
+    title: toTrimmedString(rawMeeting?.title),
+    date: toDateValue(rawMeeting?.date),
+    summary: toTrimmedString(rawMeeting?.aiSummary || rawMeeting?.summary),
+    source: sourceType === "upload" ? "Whisper AI" : "수동 작성",
+  };
+}
+
+function normalizeTodo(rawTodo) {
+  const status = toTrimmedString(rawTodo?.status) || "in_progress";
+  const priority = toTrimmedString(rawTodo?.priority) || "medium";
+
+  return {
+    id: toIdString(rawTodo?.id),
+    projectId: toIdString(rawTodo?.project),
+    title: toTrimmedString(rawTodo?.title),
+    dueDate: toDateValue(rawTodo?.due_date),
+    completed: status === "done",
+    priority,
+    estimate: getPriorityLabel(priority),
+  };
+}
+
+function normalizeSchedule(rawSchedule) {
+  return {
+    id: toIdString(rawSchedule?.id),
+    projectId: toIdString(rawSchedule?.project),
+    title: toTrimmedString(rawSchedule?.title),
+    date: toDateValue(rawSchedule?.start_datetime),
+    timeLabel: formatScheduleTimeLabel(rawSchedule),
+  };
+}
+
+function normalizePortfolio(rawPortfolio) {
+  const action = pickFirstDefined(rawPortfolio?.action, []);
+
+  return {
+    id: toIdString(rawPortfolio?.id),
+    projectId: toIdString(rawPortfolio?.projectId),
+    title: toTrimmedString(rawPortfolio?.title),
+    createdAt: toDateValue(rawPortfolio?.createdAt),
+    summary: toTrimmedString(rawPortfolio?.summary || rawPortfolio?.description),
+    keywords: normalizeStringList(rawPortfolio?.keywords),
+    situation: toTrimmedString(rawPortfolio?.situation),
+    task: toTrimmedString(rawPortfolio?.task),
+    action: Array.isArray(action) ? action.map(toTrimmedString).filter(Boolean) : action,
+    result: toTrimmedString(rawPortfolio?.result),
+  };
+}
+
+function addDerivedProjectRelations(projects, meetingNotes, todos, schedules) {
+  return projects.map((project) => {
+    const meetingIds = new Set(project.meetingIds);
+    const todoIds = new Set(project.todoIds);
+    const scheduleIds = new Set(project.scheduleIds);
+
+    meetingNotes.forEach((meetingNote) => {
+      if (
+        meetingNote.projectId === project.id ||
+        (meetingNote.project && meetingNote.project === project.name)
+      ) {
+        meetingIds.add(meetingNote.id);
+      }
+    });
+
+    todos.forEach((todo) => {
+      if (todo.projectId === project.id) {
+        todoIds.add(todo.id);
+      }
+    });
+
+    schedules.forEach((schedule) => {
+      if (schedule.projectId === project.id) {
+        scheduleIds.add(schedule.id);
+      }
+    });
+
+    return {
+      ...project,
+      meetingIds: Array.from(meetingIds),
+      todoIds: Array.from(todoIds),
+      scheduleIds: Array.from(scheduleIds),
+    };
+  });
+}
+
+function buildProjectRequestPayload(payload) {
+  return {
+    name: toTrimmedString(payload?.name),
+    description: toTrimmedString(payload?.description),
+    startDate: toDateValue(payload?.startDate) || null,
+    endDate: toDateValue(payload?.endDate) || null,
+    status: normalizeProjectStatus(payload?.status),
+    tags: normalizeStringList(payload?.tags),
+    colorKey: normalizeProjectColor(payload?.colorKey),
+    meetingIds: normalizeIdList(payload?.meetingIds).map(toApiId).filter(Boolean),
+    todoIds: normalizeIdList(payload?.todoIds).map(toApiId).filter(Boolean),
+    scheduleIds: normalizeIdList(payload?.scheduleIds)
+      .map(toApiId)
+      .filter(Boolean),
+  };
+}
+
+function buildPortfolioRequestPayload(payload, projectId) {
+  return {
+    projectId: toApiId(projectId ?? payload?.projectId),
+    title: toTrimmedString(payload?.title),
+    summary: toTrimmedString(payload?.summary || payload?.situation),
+    keywords: normalizeStringList(payload?.keywords),
+    situation: toTrimmedString(payload?.situation),
+    task: toTrimmedString(payload?.task),
+    action: normalizeStringList(payload?.action),
+    result: toTrimmedString(payload?.result),
+    isPublic: Boolean(payload?.isPublic),
+  };
+}
+
+async function getPaginatedResults(path, params = {}) {
+  const collectedResults = [];
+  let nextPath = path;
+  let nextParams = params;
+
+  while (nextPath) {
+    const response = await apiClient.get(nextPath, { params: nextParams });
+    const responseData = response.data;
+
+    if (Array.isArray(responseData)) {
+      collectedResults.push(...responseData);
+      break;
+    }
+
+    const pageResults = Array.isArray(responseData?.results)
+      ? responseData.results
+      : [];
+
+    collectedResults.push(...pageResults);
+
+    if (!responseData?.next) {
+      break;
+    }
+
+    nextPath = responseData.next;
+    nextParams = undefined;
+  }
+
+  return collectedResults;
+}
+
+async function patchItemProject(path, itemId, projectValue) {
+  await apiClient.patch(`${path}${itemId}/`, { project: projectValue });
+}
+
+async function syncProjectRelations(project, nextValues, previousValues = {}) {
+  const projectId = toApiId(project.id);
+
+  if (!projectId) {
+    return;
+  }
+
+  const relationConfigs = [
+    {
+      path: "/api/meetings/",
+      selectedIds: normalizeIdList(nextValues.meetingIds),
+      previousIds: normalizeIdList(previousValues.meetingIds),
+      projectValue: project.name,
+      emptyProjectValue: null,
+    },
+    {
+      path: "/api/todos/",
+      selectedIds: normalizeIdList(nextValues.todoIds),
+      previousIds: normalizeIdList(previousValues.todoIds),
+      projectValue: projectId,
+      emptyProjectValue: null,
+    },
+    {
+      path: "/api/schedules/",
+      selectedIds: normalizeIdList(nextValues.scheduleIds),
+      previousIds: normalizeIdList(previousValues.scheduleIds),
+      projectValue: projectId,
+      emptyProjectValue: null,
+    },
+  ];
+
+  for (const config of relationConfigs) {
+    const selectedIdSet = new Set(config.selectedIds);
+    const previousIdSet = new Set(config.previousIds);
+    const idsToAttach = config.selectedIds;
+    const idsToDetach = config.previousIds.filter((id) => !selectedIdSet.has(id));
+
+    await Promise.all([
+      ...idsToAttach.map((id) =>
+        patchItemProject(config.path, id, config.projectValue),
+      ),
+      ...idsToDetach
+        .filter((id) => previousIdSet.has(id))
+        .map((id) =>
+          patchItemProject(config.path, id, config.emptyProjectValue),
+        ),
+    ]);
   }
 }
 
 export function getProjectWorkspace() {
-  return readProjectWorkspace();
+  return buildDefaultProjectWorkspace();
 }
 
 export function saveProjectWorkspace(workspace) {
-  const normalizedWorkspace = normalizeProjectWorkspace(workspace);
+  return cloneData(normalizeProjectWorkspace(workspace));
+}
 
-  if (hasWindow()) {
-    window.localStorage.setItem(
-      PROJECT_WORKSPACE_STORAGE_KEY,
-      JSON.stringify(normalizedWorkspace),
+export async function fetchProjectWorkspace() {
+  try {
+    const [
+      rawProjects,
+      rawMeetingNotes,
+      rawTodos,
+      rawSchedules,
+      rawPortfolios,
+    ] = await Promise.all([
+      getPaginatedResults("/api/projects/", { page_size: PROJECT_PAGE_SIZE }),
+      getPaginatedResults("/api/meetings/", { page_size: PROJECT_PAGE_SIZE }),
+      getPaginatedResults("/api/todos/", { page_size: PROJECT_PAGE_SIZE }),
+      getPaginatedResults("/api/schedules/", {
+        ordering: "start_datetime",
+        page_size: PROJECT_PAGE_SIZE,
+      }),
+      getPaginatedResults("/api/portfolios/", { page_size: PROJECT_PAGE_SIZE }),
+    ]);
+
+    const meetingNotes = rawMeetingNotes.map(normalizeMeeting);
+    const todos = rawTodos.map(normalizeTodo);
+    const schedules = rawSchedules.map(normalizeSchedule);
+    const projects = addDerivedProjectRelations(
+      rawProjects.map(normalizeProject),
+      meetingNotes,
+      todos,
+      schedules,
+    );
+    const portfolios = rawPortfolios.map(normalizePortfolio);
+
+    return normalizeProjectWorkspace({
+      projects,
+      meetingNotes,
+      todos,
+      schedules,
+      portfolios,
+    });
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "프로젝트 데이터를 불러오지 못했습니다."),
     );
   }
+}
 
-  return cloneData(normalizedWorkspace);
+export async function createProject(payload) {
+  try {
+    const response = await apiClient.post(
+      "/api/projects/",
+      buildProjectRequestPayload(payload),
+    );
+    const project = normalizeProject(response.data);
+
+    await syncProjectRelations(project, payload);
+
+    return project;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "프로젝트를 생성하지 못했습니다."),
+    );
+  }
+}
+
+export async function updateProject(projectId, payload, previousProject) {
+  try {
+    const response = await apiClient.patch(
+      `/api/projects/${projectId}/`,
+      buildProjectRequestPayload(payload),
+    );
+    const project = normalizeProject(response.data);
+
+    await syncProjectRelations(project, payload, previousProject);
+
+    return project;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "프로젝트를 수정하지 못했습니다."),
+    );
+  }
+}
+
+export async function deleteProject(projectId) {
+  try {
+    await apiClient.delete(`/api/projects/${projectId}/`);
+    return true;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "프로젝트를 삭제하지 못했습니다."),
+    );
+  }
+}
+
+export async function createPortfolio(payload, projectId) {
+  try {
+    const response = await apiClient.post(
+      "/api/portfolios/",
+      buildPortfolioRequestPayload(payload, projectId),
+    );
+
+    return normalizePortfolio(response.data);
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "포트폴리오를 생성하지 못했습니다."),
+    );
+  }
+}
+
+export async function updatePortfolio(portfolioId, payload, projectId) {
+  try {
+    const response = await apiClient.patch(
+      `/api/portfolios/${portfolioId}/`,
+      buildPortfolioRequestPayload(payload, projectId),
+    );
+
+    return normalizePortfolio(response.data);
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "포트폴리오를 수정하지 못했습니다."),
+    );
+  }
+}
+
+export async function deletePortfolio(portfolioId) {
+  try {
+    await apiClient.delete(`/api/portfolios/${portfolioId}/`);
+    return true;
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "포트폴리오를 삭제하지 못했습니다."),
+    );
+  }
+}
+
+export async function generatePortfolio(projectId) {
+  try {
+    const response = await apiClient.post("/api/portfolios/generate/", {
+      projectId: toApiId(projectId),
+    });
+
+    return normalizePortfolio(response.data);
+  } catch (error) {
+    throw new Error(
+      extractApiErrorMessage(error, "AI 포트폴리오를 생성하지 못했습니다."),
+    );
+  }
 }
 
 export function getProjectTheme(colorKey) {

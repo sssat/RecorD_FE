@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ProjectForm from "./ProjectForm";
 import PortfolioResult from "./PortfolioResult";
 import PortfolioExport from "./PortfolioExport";
 import {
+  createPortfolio,
+  createProject,
+  deletePortfolio,
+  deleteProject,
+  fetchProjectWorkspace,
+  generatePortfolio,
   getProjectWorkspace,
   PROJECT_COLOR_THEMES,
   PROJECT_STATUS_META,
-  saveProjectWorkspace,
+  updatePortfolio,
+  updateProject,
 } from "../../data/projectApi";
 import {
   formatCompactKoreanDate,
@@ -160,6 +167,12 @@ function clampText(value, length = 150) {
   return `${value.slice(0, length).trim()}...`;
 }
 
+function getFriendlyErrorMessage(error, fallbackMessage) {
+  return error instanceof Error && error.message
+    ? error.message
+    : fallbackMessage;
+}
+
 function createPortfolioFormValues(portfolio) {
   if (portfolio) {
     return {
@@ -244,34 +257,6 @@ function getProjectMetrics(project, workspace) {
     portfolioCount: workspace.portfolios.filter(
       (portfolio) => portfolio.projectId === project.id,
     ).length,
-  };
-}
-
-function buildGeneratedPortfolio(project, workspace) {
-  const relatedMeetingNotes = getRelatedMeetingNotes(project, workspace);
-  const relatedTodos = getRelatedTodos(project, workspace);
-  const relatedSchedules = getRelatedSchedules(project, workspace);
-  const completedTodos = relatedTodos.filter((todo) => todo.completed);
-  const theme = getProjectTheme(project.colorKey);
-  const firstMeetingTitle = relatedMeetingNotes[0]?.title ?? "프로젝트 킥오프";
-
-  return {
-    id: `portfolio-${Date.now()}`,
-    projectId: project.id,
-    title: `${project.name} 경험 정리`,
-    createdAt: new Date().toISOString().slice(0, 10),
-    summary: `${project.name}에서 쌓인 회의록과 완료된 할 일을 기반으로 생성한 STAR 포트폴리오 초안입니다.`,
-    keywords: [...project.tags.slice(0, 3), "문제 해결", theme.name].filter(
-      (keyword, index, allKeywords) => allKeywords.indexOf(keyword) === index,
-    ),
-    situation: `${project.description} 프로젝트를 진행하며 ${relatedMeetingNotes.length}개의 회의록과 ${relatedSchedules.length}개의 일정을 축적했습니다. 특히 ${firstMeetingTitle} 이후 역할과 산출물을 명확히 정리할 필요가 있었습니다.`,
-    task: `프로젝트 내 회의 요약과 완료된 할 일을 하나의 경험 서술로 재구성해, 취업 포트폴리오에 바로 활용할 수 있는 STAR 초안을 만드는 역할을 맡았습니다.`,
-    action: [
-      `${relatedMeetingNotes.length}개의 회의록에서 핵심 논의와 개인 역할을 추려 프로젝트 맥락을 정리했습니다.`,
-      `완료된 할 일 ${completedTodos.length}개를 기준으로 실질적으로 수행한 작업과 기여도를 구조화했습니다.`,
-      `${relatedSchedules.length}개의 일정 흐름을 반영해 문제 정의부터 결과 검증까지의 과정을 시간 순서대로 정리했습니다.`,
-    ],
-    result: `완료된 할 일 ${completedTodos.length}건과 회의 요약 데이터를 바탕으로, ${project.name} 경험을 면접 답변과 이력서에 바로 활용할 수 있는 STAR 포트폴리오 초안을 빠르게 확보했습니다.`,
   };
 }
 
@@ -997,6 +982,8 @@ function AiGenerationDialog({
 
 function ProjectPage() {
   const [workspace, setWorkspace] = useState(() => getProjectWorkspace());
+  const [isWorkspaceLoading, setIsWorkspaceLoading] = useState(true);
+  const [workspaceErrorMessage, setWorkspaceErrorMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -1006,6 +993,23 @@ function ProjectPage() {
   const [exportPortfolioId, setExportPortfolioId] = useState(null);
   const [aiDialogProjectId, setAiDialogProjectId] = useState(null);
   const [isGeneratingPortfolio, setIsGeneratingPortfolio] = useState(false);
+
+  const loadProjectData = useCallback(async () => {
+    setIsWorkspaceLoading(true);
+    setWorkspaceErrorMessage("");
+
+    try {
+      const nextWorkspace = await fetchProjectWorkspace();
+      setWorkspace(nextWorkspace);
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "프로젝트 데이터를 불러오지 못했습니다."),
+      );
+      setWorkspace(getProjectWorkspace());
+    } finally {
+      setIsWorkspaceLoading(false);
+    }
+  }, []);
 
   const totalPages = Math.max(
     1,
@@ -1070,8 +1074,8 @@ function ProjectPage() {
       : null;
 
   useEffect(() => {
-    saveProjectWorkspace(workspace);
-  }, [workspace]);
+    loadProjectData();
+  }, [loadProjectData]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -1096,41 +1100,33 @@ function ProjectPage() {
     setActiveTab("overview");
   };
 
-  const handleSubmitProject = (formValues) => {
-    if (projectFormState?.mode === "edit" && editingProject) {
-      setWorkspace((currentWorkspace) => ({
-        ...currentWorkspace,
-        projects: currentWorkspace.projects.map((project) =>
-          project.id === editingProject.id
-            ? { ...project, ...formValues }
-            : project,
-        ),
-      }));
+  const handleSubmitProject = async (formValues) => {
+    setWorkspaceErrorMessage("");
+
+    try {
+      const savedProject =
+        projectFormState?.mode === "edit" && editingProject
+          ? await updateProject(editingProject.id, formValues, editingProject)
+          : await createProject(formValues);
+      const nextWorkspace = await fetchProjectWorkspace();
+
+      setWorkspace(nextWorkspace);
       setProjectFormState(null);
-      return;
+      setSelectedProjectId(savedProject.id);
+      setSelectedPortfolioId(null);
+      setActiveTab("overview");
+
+      if (projectFormState?.mode !== "edit") {
+        setCurrentPage(1);
+      }
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "프로젝트를 저장하지 못했습니다."),
+      );
     }
-
-    const nextProjectId = `project-${Date.now()}`;
-
-    setWorkspace((currentWorkspace) => ({
-      ...currentWorkspace,
-      projects: [
-        {
-          id: nextProjectId,
-          ...formValues,
-        },
-        ...currentWorkspace.projects,
-      ],
-    }));
-
-    setProjectFormState(null);
-    setSelectedProjectId(nextProjectId);
-    setSelectedPortfolioId(null);
-    setActiveTab("overview");
-    setCurrentPage(1);
   };
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = async () => {
     if (!selectedProject) {
       return;
     }
@@ -1143,65 +1139,53 @@ function ProjectPage() {
       return;
     }
 
-    setWorkspace((currentWorkspace) => ({
-      ...currentWorkspace,
-      projects: currentWorkspace.projects.filter(
-        (project) => project.id !== selectedProject.id,
-      ),
-      portfolios: currentWorkspace.portfolios.filter(
-        (portfolio) => portfolio.projectId !== selectedProject.id,
-      ),
-    }));
-    setSelectedProjectId(null);
-    setSelectedPortfolioId(null);
-    setActiveTab("overview");
+    setWorkspaceErrorMessage("");
+
+    try {
+      await deleteProject(selectedProject.id);
+      const nextWorkspace = await fetchProjectWorkspace();
+
+      setWorkspace(nextWorkspace);
+      setSelectedProjectId(null);
+      setSelectedPortfolioId(null);
+      setActiveTab("overview");
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "프로젝트를 삭제하지 못했습니다."),
+      );
+    }
   };
 
-  const handleSubmitPortfolio = (formValues) => {
+  const handleSubmitPortfolio = async (formValues) => {
     if (!selectedProject) {
       return;
     }
 
-    if (portfolioFormState?.mode === "edit" && editingPortfolio) {
-      setWorkspace((currentWorkspace) => ({
-        ...currentWorkspace,
-        portfolios: currentWorkspace.portfolios.map((portfolio) =>
-          portfolio.id === editingPortfolio.id
-            ? {
-                ...portfolio,
-                ...formValues,
-                summary: clampText(formValues.situation, 120),
-              }
-            : portfolio,
-        ),
-      }));
-      setSelectedPortfolioId(editingPortfolio.id);
+    setWorkspaceErrorMessage("");
+
+    try {
+      const savedPortfolio =
+        portfolioFormState?.mode === "edit" && editingPortfolio
+          ? await updatePortfolio(
+              editingPortfolio.id,
+              formValues,
+              selectedProject.id,
+            )
+          : await createPortfolio(formValues, selectedProject.id);
+      const nextWorkspace = await fetchProjectWorkspace();
+
+      setWorkspace(nextWorkspace);
+      setSelectedPortfolioId(savedPortfolio.id);
       setPortfolioFormState(null);
-      return;
+      setActiveTab("portfolios");
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "포트폴리오를 저장하지 못했습니다."),
+      );
     }
-
-    const nextPortfolioId = `portfolio-${Date.now()}`;
-
-    setWorkspace((currentWorkspace) => ({
-      ...currentWorkspace,
-      portfolios: [
-        {
-          id: nextPortfolioId,
-          projectId: selectedProject.id,
-          createdAt: new Date().toISOString().slice(0, 10),
-          summary: clampText(formValues.situation, 120),
-          ...formValues,
-        },
-        ...currentWorkspace.portfolios,
-      ],
-    }));
-
-    setSelectedPortfolioId(nextPortfolioId);
-    setPortfolioFormState(null);
-    setActiveTab("portfolios");
   };
 
-  const handleDeletePortfolio = () => {
+  const handleDeletePortfolio = async () => {
     if (!selectedPortfolio) {
       return;
     }
@@ -1214,39 +1198,46 @@ function ProjectPage() {
       return;
     }
 
-    setWorkspace((currentWorkspace) => ({
-      ...currentWorkspace,
-      portfolios: currentWorkspace.portfolios.filter(
-        (portfolio) => portfolio.id !== selectedPortfolio.id,
-      ),
-    }));
-    setSelectedPortfolioId(null);
-    setActiveTab("portfolios");
+    setWorkspaceErrorMessage("");
+
+    try {
+      await deletePortfolio(selectedPortfolio.id);
+      const nextWorkspace = await fetchProjectWorkspace();
+
+      setWorkspace(nextWorkspace);
+      setSelectedPortfolioId(null);
+      setActiveTab("portfolios");
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "포트폴리오를 삭제하지 못했습니다."),
+      );
+    }
   };
 
-  const handleGeneratePortfolio = () => {
+  const handleGeneratePortfolio = async () => {
     if (!aiDialogProject) {
       return;
     }
 
     setIsGeneratingPortfolio(true);
+    setWorkspaceErrorMessage("");
 
-    window.setTimeout(() => {
-      const generatedPortfolio = buildGeneratedPortfolio(
-        aiDialogProject,
-        workspace,
-      );
+    try {
+      const generatedPortfolio = await generatePortfolio(aiDialogProject.id);
+      const nextWorkspace = await fetchProjectWorkspace();
 
-      setWorkspace((currentWorkspace) => ({
-        ...currentWorkspace,
-        portfolios: [generatedPortfolio, ...currentWorkspace.portfolios],
-      }));
+      setWorkspace(nextWorkspace);
       setSelectedProjectId(aiDialogProject.id);
       setSelectedPortfolioId(generatedPortfolio.id);
       setActiveTab("portfolios");
       setAiDialogProjectId(null);
+    } catch (error) {
+      setWorkspaceErrorMessage(
+        getFriendlyErrorMessage(error, "AI 포트폴리오를 생성하지 못했습니다."),
+      );
+    } finally {
       setIsGeneratingPortfolio(false);
-    }, 850);
+    }
   };
 
   const listView = (
@@ -1278,6 +1269,17 @@ function ProjectPage() {
           />
         ))}
       </div>
+
+      {!isWorkspaceLoading && pagedProjects.length === 0 ? (
+        <div className="rounded-[32px] border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+          <p className="text-xl font-semibold text-slate-600">
+            아직 등록된 프로젝트가 없습니다.
+          </p>
+          <p className="mt-3 text-base text-slate-400">
+            새 프로젝트를 만들면 회의록, 할 일, 일정을 함께 연결할 수 있습니다.
+          </p>
+        </div>
+      ) : null}
 
       {totalPages > 1 ? (
         <div className="flex items-center justify-center gap-3">
@@ -1535,6 +1537,25 @@ function ProjectPage() {
 
   return (
     <>
+      {workspaceErrorMessage ? (
+        <div className="mb-6 flex flex-col gap-3 rounded-[24px] border border-red-100 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 sm:flex-row sm:items-center sm:justify-between">
+          <p>{workspaceErrorMessage}</p>
+          <button
+            type="button"
+            onClick={loadProjectData}
+            className="shrink-0 rounded-full border border-red-200 bg-white px-4 py-2 text-red-600 transition hover:border-red-300 hover:bg-red-100"
+          >
+            다시 시도
+          </button>
+        </div>
+      ) : null}
+
+      {isWorkspaceLoading ? (
+        <div className="mb-6 rounded-[24px] border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-500 shadow-sm">
+          프로젝트 데이터를 불러오는 중입니다.
+        </div>
+      ) : null}
+
       {selectedProject ? detailView : listView}
 
       {projectFormState ? (

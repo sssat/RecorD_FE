@@ -213,7 +213,7 @@ async function refreshAccessToken() {
   const refreshToken = readToken("refresh");
 
   if (!refreshToken) {
-    throw new Error("Login is required before calling the meeting API.");
+    throw new Error("Login is required before calling the API.");
   }
 
   refreshRequestPromise = axios
