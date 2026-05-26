@@ -336,7 +336,7 @@ function SectionContainer({ title, linkTo, children }) {
     <div className="bg-white rounded-[1.5rem] p-7 border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[20px] font-bold text-slate-900">{title}</h2>
-        <Link to={linkTo} className="text-sm font-semibold text-[#8dc63f] hover:text-[#7bb034] transition-colors flex items-center">
+        <Link to={linkTo} className="text-sm font-semibold text-[#3A3A3A] hover:text-[#000000] transition-colors flex items-center">
           전체보기 <span className="ml-1">→</span>
         </Link>
       </div>
