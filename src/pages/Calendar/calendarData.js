@@ -10,47 +10,38 @@ export const EVENT_TYPE_OPTIONS = [
   { value: 'meeting', label: '회의' },
   { value: 'deadline', label: '마감' },
   { value: 'presentation', label: '발표' },
-  { value: 'review', label: '검토' },
-  { value: 'content', label: '콘텐츠' },
-];
-
-export const PROJECT_OPTIONS = [
-  '선택하지 않음',
-  'Recor-D',
-  '포트폴리오',
-  '디자인 시스템',
-  '캡스톤',
+  { value: 'other', label: '기타' },
 ];
 
 export const EVENT_COLOR_OPTIONS = [
   {
-    value: 'primary',
-    label: 'Sage',
+    value: 'green',
+    label: '그린',
   },
   {
-    value: 'secondary',
-    label: 'Mint',
+    value: 'teal',
+    label: '티얼',
   },
   {
-    value: 'success',
-    label: 'Lime',
+    value: 'brightGreen',
+    label: '라임',
   },
   {
-    value: 'info',
-    label: 'Sky',
+    value: 'blue',
+    label: '블루',
   },
   {
-    value: 'warning',
-    label: 'Amber',
+    value: 'yellow',
+    label: '옐로우',
   },
   {
-    value: 'danger',
-    label: 'Rose',
+    value: 'red',
+    label: '레드',
   },
 ];
 
 export const EVENT_THEMES = {
-  primary: {
+  green: {
     dot: 'bg-[#95D34F]',
     chip: 'border-[#D1EFA9] bg-[#E8F7D4] text-[#3F6021]',
     card: 'bg-[#E8F7D4]',
@@ -58,7 +49,7 @@ export const EVENT_THEMES = {
     swatch: 'bg-[#E8F7D4]',
     text: 'text-[#3F6021]',
   },
-  secondary: {
+  teal: {
     dot: 'bg-[#3CC4AD]',
     chip: 'border-[#A9EBE1] bg-[#D4F5F0] text-[#1A574D]',
     card: 'bg-[#D4F5F0]',
@@ -66,7 +57,7 @@ export const EVENT_THEMES = {
     swatch: 'bg-[#D4F5F0]',
     text: 'text-[#1A574D]',
   },
-  success: {
+  brightGreen: {
     dot: 'bg-[#6FDB6D]',
     chip: 'border-[#BFEFBD] bg-[#DFF7DE] text-[#2D632C]',
     card: 'bg-[#DFF7DE]',
@@ -74,7 +65,7 @@ export const EVENT_THEMES = {
     swatch: 'bg-[#DFF7DE]',
     text: 'text-[#2D632C]',
   },
-  info: {
+  blue: {
     dot: 'bg-[#5BA3F3]',
     chip: 'border-[#BBE1FB] bg-[#DDF0FD] text-[#214B75]',
     card: 'bg-[#DDF0FD]',
@@ -82,7 +73,7 @@ export const EVENT_THEMES = {
     swatch: 'bg-[#DDF0FD]',
     text: 'text-[#214B75]',
   },
-  warning: {
+  yellow: {
     dot: 'bg-[#F2D518]',
     chip: 'border-[#FDF3A3] bg-[#FEF9D1] text-[#70620A]',
     card: 'bg-[#FEF9D1]',
@@ -90,7 +81,7 @@ export const EVENT_THEMES = {
     swatch: 'bg-[#FEF9D1]',
     text: 'text-[#70620A]',
   },
-  danger: {
+  red: {
     dot: 'bg-[#FF5456]',
     chip: 'border-[#FFC1C1] bg-[#FFE0E0] text-[#752425]',
     card: 'bg-[#FFE0E0]',
@@ -101,19 +92,14 @@ export const EVENT_THEMES = {
 };
 
 const EVENT_COLOR_BY_TYPE = {
-  meeting: 'primary',
-  deadline: 'warning',
-  presentation: 'secondary',
-  review: 'info',
-  content: 'success',
+  meeting: 'green',
+  deadline: 'yellow',
+  presentation: 'teal',
+  other: 'blue',
 };
 
 function padNumber(value) {
   return String(value).padStart(2, '0');
-}
-
-function withTime(date, hour, minute = 0) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
 }
 
 export function startOfDay(date) {
@@ -184,7 +170,7 @@ export function isWithinRange(date, startDate, endDate) {
 }
 
 export function getEventColorByType(type) {
-  return EVENT_COLOR_BY_TYPE[type] ?? 'primary';
+  return EVENT_COLOR_BY_TYPE[type] ?? 'green';
 }
 
 export function hasEventTime(event) {
@@ -305,140 +291,4 @@ export function getTodoBadgeToneClassName(todoDate, anchorDate) {
   }
 
   return 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200';
-}
-
-export function buildMockCalendarData(baseDate) {
-  const today = startOfDay(baseDate);
-
-  return {
-    events: [
-      {
-        id: 'event-design-review',
-        title: '디자인 리뷰 미팅',
-        start: withTime(addDays(today, 1), 14, 0),
-        end: withTime(addDays(today, 1), 15, 30),
-        location: '회의실 A',
-        type: 'meeting',
-        project: '디자인 시스템',
-        description: '디자인 시스템 최종 검토 및 승인',
-        color: 'primary',
-      },
-      {
-        id: 'event-dev-sprint',
-        title: '개발 스프린트 종료',
-        start: withTime(addDays(today, 4), 17, 0),
-        end: withTime(addDays(today, 4), 18, 0),
-        location: '프로젝트룸',
-        type: 'deadline',
-        project: 'Recor-D',
-        description: '캘린더 기능과 메인 대시보드 연동 작업 마감',
-        color: 'warning',
-      },
-      {
-        id: 'event-portfolio-demo',
-        title: '포트폴리오 발표',
-        start: withTime(addDays(today, 6), 10, 0),
-        end: withTime(addDays(today, 6), 12, 0),
-        location: '대강당',
-        type: 'presentation',
-        project: '포트폴리오',
-        description: '포트폴리오 주요 작업 결과를 발표하고 피드백을 받습니다.',
-        color: 'secondary',
-      },
-      {
-        id: 'event-content-production',
-        title: '콘텐츠 촬영 주간',
-        start: withTime(addDays(today, 9), 13, 0),
-        end: withTime(addDays(today, 11), 16, 0),
-        location: '스튜디오 B',
-        type: 'content',
-        project: 'Recor-D',
-        description: '서비스 소개 영상과 케이스 스터디 시각 자료를 촬영합니다.',
-        color: 'success',
-      },
-      {
-        id: 'event-usability-review',
-        title: '사용성 검토 세션',
-        start: withTime(addDays(today, -1), 10, 0),
-        end: withTime(today, 11, 30),
-        location: '온라인 미팅룸',
-        type: 'review',
-        project: '캡스톤',
-        description: '사용자 테스트 결과를 바탕으로 개선 포인트를 정리합니다.',
-        color: 'info',
-      },
-    ],
-    todos: [
-      {
-        id: 'todo-doc-update',
-        title: '프로젝트 문서 업데이트',
-        date: today,
-        priority: 'high',
-        project: 'Recor-D',
-        description: '이번 주 변경된 기능을 위키와 발표 자료에 반영합니다.',
-        completed: false,
-        completedAt: null,
-      },
-      {
-        id: 'todo-design-draft',
-        title: '디자인 시안 검토',
-        date: addDays(today, 1),
-        priority: 'medium',
-        project: '디자인 시스템',
-        description: '피그마 피드백을 정리하고 수정 우선순위를 정합니다.',
-        completed: false,
-        completedAt: null,
-      },
-      {
-        id: 'todo-test-cases',
-        title: '테스트 케이스 작성',
-        date: addDays(today, 2),
-        priority: 'medium',
-        project: 'Recor-D',
-        description: '캘린더 동작 시나리오를 문서화합니다.',
-        completed: false,
-        completedAt: null,
-      },
-      {
-        id: 'todo-code-review',
-        title: '코드 리뷰',
-        date: addDays(today, 3),
-        priority: 'low',
-        project: 'Recor-D',
-        description: '브랜치 병합 전 UI 변경사항을 리뷰합니다.',
-        completed: false,
-        completedAt: null,
-      },
-      {
-        id: 'todo-meeting-note',
-        title: '회의록 작성 완료',
-        date: addDays(today, -1),
-        priority: 'medium',
-        project: '캡스톤',
-        description: '주간 회의 내용을 공유 문서로 정리했습니다.',
-        completed: true,
-        completedAt: withTime(addDays(today, -1), 18, 0),
-      },
-      {
-        id: 'todo-asset-upload',
-        title: '프로젝트 문서 업데이트',
-        date: addDays(today, -2),
-        priority: 'high',
-        project: '포트폴리오',
-        description: '포트폴리오 소개 섹션에 최신 스크린샷을 반영했습니다.',
-        completed: true,
-        completedAt: withTime(addDays(today, -2), 16, 30),
-      },
-      {
-        id: 'todo-archived-task',
-        title: '마감 지난 작업',
-        date: addDays(today, -4),
-        priority: 'low',
-        project: '선택하지 않음',
-        description: '이미 반영이 끝난 작업을 완료 목록으로 옮깁니다.',
-        completed: true,
-        completedAt: withTime(addDays(today, -3), 13, 0),
-      },
-    ],
-  };
 }

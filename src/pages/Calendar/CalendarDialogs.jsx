@@ -3,7 +3,6 @@ import {
   EVENT_COLOR_OPTIONS,
   EVENT_THEMES,
   EVENT_TYPE_OPTIONS,
-  PROJECT_OPTIONS,
   TODO_PRIORITY_OPTIONS,
   formatEventFullDateLabel,
   formatEventTimeRange,
@@ -386,13 +385,10 @@ function ConfirmDialog({
   );
 }
 
-function toProjectOption(projectName) {
-  return { value: projectName, label: projectName };
-}
-
 export function TodoFormDialog({
   mode,
   initialValues,
+  projectOptions = [],
   onClose,
   onSubmit,
   onDelete,
@@ -486,7 +482,7 @@ export function TodoFormDialog({
           <FormField label="프로젝트" optional>
             <FieldSelect
               value={formState.project}
-              options={PROJECT_OPTIONS.map(toProjectOption)}
+              options={projectOptions}
               onChange={(nextValue) => setFieldValue("project", nextValue)}
               placeholder="프로젝트를 선택해 주세요"
             />
@@ -507,7 +503,13 @@ export function TodoFormDialog({
   );
 }
 
-export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
+export function EventFormDialog({
+  mode,
+  initialValues,
+  projectOptions = [],
+  onClose,
+  onSubmit,
+}) {
   const [formState, setFormState] = useState(initialValues);
 
   const setFieldValue = (fieldName, nextValue) => {
@@ -700,7 +702,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
           <FormField label="프로젝트" optional>
             <FieldSelect
               value={formState.project}
-              options={PROJECT_OPTIONS.map(toProjectOption)}
+              options={projectOptions}
               onChange={(nextValue) => setFieldValue("project", nextValue)}
               placeholder="프로젝트를 선택해 주세요"
             />
@@ -712,7 +714,7 @@ export function EventFormDialog({ mode, initialValues, onClose, onSubmit }) {
 }
 
 export function EventDetailDialog({ event, onClose, onDelete, onEdit }) {
-  const theme = EVENT_THEMES[event.color] ?? EVENT_THEMES.primary;
+  const theme = EVENT_THEMES[event.color] ?? EVENT_THEMES.green;
 
   return (
     <DialogShell maxWidth="max-w-[650px]" onClose={onClose}>

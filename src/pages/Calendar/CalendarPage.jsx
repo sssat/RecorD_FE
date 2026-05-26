@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   EVENT_THEMES,
   WEEKDAY_LABELS,
-  buildMockCalendarData,
   buildMonthGrid,
   combineDateAndTime,
   formatEventDateRange,
@@ -22,10 +21,37 @@ import {
   toTimeInputValue,
 } from "./calendarData";
 import {
+  createCalendarEvent,
+  createCalendarTodo,
+  deleteCalendarEvent,
+  deleteCalendarTodo,
+  getCalendarData,
+  updateCalendarEvent,
+  updateCalendarTodo,
+} from "../../data/calendarApi";
+import {
   EventDetailDialog,
   EventFormDialog,
   TodoFormDialog,
 } from "./CalendarDialogs";
+
+const NO_PROJECT_OPTION = { value: "", label: "선택하지 않음" };
+
+function buildProjectSelectOptions(projects) {
+  return [
+    NO_PROJECT_OPTION,
+    ...projects.map((project) => ({
+      value: String(project.id),
+      label: project.name,
+    })),
+  ];
+}
+
+function getFriendlyErrorMessage(error, fallbackMessage) {
+  return error instanceof Error && error.message
+    ? error.message
+    : fallbackMessage;
+}
 
 function PlusIcon() {
   return (
@@ -281,7 +307,7 @@ function buildTodoFormInitialValues(selectedDate, todo) {
       priority: todo.priority,
       date: toInputDateValue(todo.date),
       description: todo.description ?? "",
-      project: todo.project ?? "선택하지 않음",
+      project: todo.projectId == null ? "" : String(todo.projectId),
     };
   }
 
@@ -290,7 +316,7 @@ function buildTodoFormInitialValues(selectedDate, todo) {
     priority: "medium",
     date: toInputDateValue(selectedDate),
     description: "",
-    project: "선택하지 않음",
+    project: "",
   };
 }
 
@@ -309,7 +335,7 @@ function buildEventFormInitialValues(selectedDate, event) {
       color: event.color,
       location: event.location ?? "",
       description: event.description ?? "",
-      project: event.project ?? "선택하지 않음",
+      project: event.projectId == null ? "" : String(event.projectId),
     };
   }
 
@@ -324,15 +350,20 @@ function buildEventFormInitialValues(selectedDate, event) {
     color: getEventColorByType("meeting"),
     location: "",
     description: "",
-    project: "선택하지 않음",
+    project: "",
   };
 }
 
 function CalendarPage() {
   const today = useMemo(() => startOfDay(new Date()), []);
-  const [calendarState, setCalendarState] = useState(() =>
-    buildMockCalendarData(today),
-  );
+  const [calendarState, setCalendarState] = useState({
+    events: [],
+    todos: [],
+  });
+  const [projectOptions, setProjectOptions] = useState([NO_PROJECT_OPTION]);
+  const [projects, setProjects] = useState([]);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(true);
+  const [calendarErrorMessage, setCalendarErrorMessage] = useState("");
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(today));
   const [todoDialog, setTodoDialog] = useState(null);
@@ -343,6 +374,32 @@ function CalendarPage() {
   const [todoSortMode, setTodoSortMode] = useState("priority");
 
   const { events, todos } = calendarState;
+
+  const loadCalendarData = useCallback(async () => {
+    setIsCalendarLoading(true);
+    setCalendarErrorMessage("");
+
+    try {
+      const nextCalendarData = await getCalendarData();
+      setProjects(nextCalendarData.projects);
+      setProjectOptions(buildProjectSelectOptions(nextCalendarData.projects));
+      setCalendarState({
+        events: nextCalendarData.events,
+        todos: nextCalendarData.todos,
+      });
+    } catch (error) {
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "캘린더 데이터를 불러오지 못했습니다."),
+      );
+      setCalendarState({ events: [], todos: [] });
+    } finally {
+      setIsCalendarLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCalendarData();
+  }, [loadCalendarData]);
 
   const calendarDays = useMemo(
     () => buildMonthGrid(currentMonth),
@@ -480,154 +537,212 @@ function CalendarPage() {
     setCurrentMonth(startOfMonth(today));
   };
 
-  const toggleTodoCompletion = (todoId) => {
+  const toggleTodoCompletion = async (todoId) => {
+    const targetTodo = todos.find((todo) => todo.id === todoId);
+
+    if (!targetTodo) {
+      return;
+    }
+
+    const nextCompleted = !targetTodo.completed;
+    const nextStatus = nextCompleted ? "done" : "in_progress";
+    const previousTodos = todos;
+
+    setCalendarErrorMessage("");
     setCalendarState((currentState) => ({
       ...currentState,
-      todos: currentState.todos.map((todo) => {
-        if (todo.id !== todoId) {
-          return todo;
+      todos: currentState.todos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              completed: nextCompleted,
+              status: nextStatus,
+              completedAt: nextCompleted ? new Date() : null,
+            }
+          : todo,
+      ),
+    }));
+
+    try {
+      const savedTodo = await updateCalendarTodo(
+        todoId,
+        {
+          ...targetTodo,
+          status: nextStatus,
+          completed: nextCompleted,
+          projectId: targetTodo.projectId,
+        },
+        projects,
+      );
+
+      setCalendarState((currentState) => ({
+        ...currentState,
+        todos: currentState.todos.map((todo) =>
+          todo.id === todoId
+            ? {
+                ...savedTodo,
+                completedAt: nextCompleted ? new Date() : null,
+              }
+            : todo,
+        ),
+      }));
+    } catch (error) {
+      setCalendarState((currentState) => ({
+        ...currentState,
+        todos: previousTodos,
+      }));
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "할 일 상태를 변경하지 못했습니다."),
+      );
+    }
+  };
+
+  const handleSubmitTodo = async (formValues) => {
+    const todoDate = formValues.date
+      ? startOfDay(new Date(`${formValues.date}T00:00:00`))
+      : selectedDate;
+    const payload = {
+      title: formValues.title,
+      priority: formValues.priority,
+      date: todoDate,
+      description: formValues.description,
+      projectId: formValues.project,
+      status: editingTodo?.status ?? "in_progress",
+      completed: editingTodo?.completed ?? false,
+    };
+
+    setCalendarErrorMessage("");
+
+    try {
+      const savedTodo =
+        todoDialog?.mode === "edit" && editingTodo
+          ? await updateCalendarTodo(editingTodo.id, payload, projects)
+          : await createCalendarTodo(payload, projects);
+
+      setCalendarState((currentState) => {
+        if (todoDialog?.mode === "edit" && editingTodo) {
+          return {
+            ...currentState,
+            todos: currentState.todos.map((todo) =>
+              todo.id === editingTodo.id ? savedTodo : todo,
+            ),
+          };
         }
 
-        const nextCompleted = !todo.completed;
-
-        return {
-          ...todo,
-          completed: nextCompleted,
-          completedAt: nextCompleted ? new Date() : null,
-        };
-      }),
-    }));
-  };
-
-  const handleSubmitTodo = (formValues) => {
-    setCalendarState((currentState) => {
-      const todoDate = formValues.date
-        ? startOfDay(new Date(`${formValues.date}T00:00:00`))
-        : selectedDate;
-
-      if (todoDialog?.mode === "edit" && editingTodo) {
         return {
           ...currentState,
-          todos: currentState.todos.map((todo) =>
-            todo.id === editingTodo.id
-              ? {
-                  ...todo,
-                  title: formValues.title,
-                  priority: formValues.priority,
-                  date: todoDate,
-                  description: formValues.description,
-                  project: formValues.project,
-                }
-              : todo,
-          ),
+          todos: [...currentState.todos, savedTodo],
         };
-      }
+      });
 
-      return {
+      setTodoDialog(null);
+    } catch (error) {
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "할 일을 저장하지 못했습니다."),
+      );
+    }
+  };
+
+  const deleteTodo = async (todoId) => {
+    setCalendarErrorMessage("");
+
+    try {
+      await deleteCalendarTodo(todoId);
+      setCalendarState((currentState) => ({
         ...currentState,
-        todos: [
-          ...currentState.todos,
-          {
-            id: `todo-${Date.now()}`,
-            title: formValues.title,
-            priority: formValues.priority,
-            date: todoDate,
-            description: formValues.description,
-            project: formValues.project,
-            completed: false,
-            completedAt: null,
-          },
-        ],
-      };
-    });
-
-    setTodoDialog(null);
+        todos: currentState.todos.filter((todo) => todo.id !== todoId),
+      }));
+      setTodoDialog(null);
+    } catch (error) {
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "할 일을 삭제하지 못했습니다."),
+      );
+    }
   };
 
-  const deleteTodo = (todoId) => {
-    setCalendarState((currentState) => ({
-      ...currentState,
-      todos: currentState.todos.filter((todo) => todo.id !== todoId),
-    }));
-    setTodoDialog(null);
-  };
+  const handleSubmitEvent = async (formValues) => {
+    const startDateValue = formValues.startDate || toInputDateValue(selectedDate);
+    const endDateValue =
+      formValues.endDate && formValues.endDate >= startDateValue
+        ? formValues.endDate
+        : startDateValue;
+    const hasTime = formValues.hasTime !== false;
+    const startDate = combineDateAndTime(
+      startDateValue,
+      hasTime ? formValues.startTime : "00:00",
+    );
+    let endDate = combineDateAndTime(
+      endDateValue,
+      hasTime ? formValues.endTime : "00:00",
+    );
 
-  const handleSubmitEvent = (formValues) => {
-    setCalendarState((currentState) => {
-      const startDateValue = formValues.startDate || toInputDateValue(selectedDate);
-      const endDateValue =
-        formValues.endDate && formValues.endDate >= startDateValue
-          ? formValues.endDate
-          : startDateValue;
-      const hasTime = formValues.hasTime !== false;
-      const startDate = combineDateAndTime(
-        startDateValue,
-        hasTime ? formValues.startTime : "00:00",
-      );
-      let endDate = combineDateAndTime(
-        endDateValue,
-        hasTime ? formValues.endTime : "00:00",
-      );
+    if (
+      hasTime &&
+      endDateValue === startDateValue &&
+      endDate.getTime() <= startDate.getTime()
+    ) {
+      endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    }
 
-      if (
-        hasTime &&
-        endDateValue === startDateValue &&
-        endDate.getTime() <= startDate.getTime()
-      ) {
-        endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-      }
+    const payload = {
+      title: formValues.title,
+      start: startDate,
+      end: endDate,
+      hasTime,
+      type: formValues.type,
+      color: formValues.color,
+      location: formValues.location,
+      description: formValues.description,
+      projectId: formValues.project,
+    };
 
-      if (eventDialog?.mode === "edit" && editingEvent) {
+    setCalendarErrorMessage("");
+
+    try {
+      const savedEvent =
+        eventDialog?.mode === "edit" && editingEvent
+          ? await updateCalendarEvent(editingEvent.id, payload, projects)
+          : await createCalendarEvent(payload, projects);
+
+      setCalendarState((currentState) => {
+        if (eventDialog?.mode === "edit" && editingEvent) {
+          return {
+            ...currentState,
+            events: currentState.events.map((event) =>
+              event.id === editingEvent.id ? savedEvent : event,
+            ),
+          };
+        }
+
         return {
           ...currentState,
-          events: currentState.events.map((event) =>
-            event.id === editingEvent.id
-              ? {
-                  ...event,
-                  title: formValues.title,
-                  start: startDate,
-                  end: endDate,
-                  hasTime,
-                  type: formValues.type,
-                  color: formValues.color,
-                  location: formValues.location,
-                  description: formValues.description,
-                  project: formValues.project,
-                }
-              : event,
-          ),
+          events: [...currentState.events, savedEvent],
         };
-      }
+      });
 
-      return {
-        ...currentState,
-        events: [
-          ...currentState.events,
-          {
-            id: `event-${Date.now()}`,
-            title: formValues.title,
-            start: startDate,
-            end: endDate,
-            hasTime,
-            type: formValues.type,
-            color: formValues.color,
-            location: formValues.location,
-            description: formValues.description,
-            project: formValues.project,
-          },
-        ],
-      };
-    });
-
-    setEventDialog(null);
+      setEventDialog(null);
+    } catch (error) {
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "일정을 저장하지 못했습니다."),
+      );
+    }
   };
 
-  const deleteEvent = (eventId) => {
-    setCalendarState((currentState) => ({
-      ...currentState,
-      events: currentState.events.filter((event) => event.id !== eventId),
-    }));
-    setDetailEventId(null);
+  const deleteEvent = async (eventId) => {
+    setCalendarErrorMessage("");
+
+    try {
+      await deleteCalendarEvent(eventId);
+      setCalendarState((currentState) => ({
+        ...currentState,
+        events: currentState.events.filter((event) => event.id !== eventId),
+      }));
+      setDetailEventId(null);
+    } catch (error) {
+      setCalendarErrorMessage(
+        getFriendlyErrorMessage(error, "일정을 삭제하지 못했습니다."),
+      );
+    }
   };
 
   const openCreateTodoDialog = () => {
@@ -679,6 +794,25 @@ function CalendarPage() {
             </ActionButton>
           </div>
         </div>
+
+        {calendarErrorMessage ? (
+          <div className="flex flex-col gap-3 rounded-[24px] border border-red-100 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 sm:flex-row sm:items-center sm:justify-between">
+            <p>{calendarErrorMessage}</p>
+            <button
+              type="button"
+              onClick={loadCalendarData}
+              className="shrink-0 rounded-full border border-red-200 bg-white px-4 py-2 text-red-600 transition hover:border-red-300 hover:bg-red-100"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : null}
+
+        {isCalendarLoading ? (
+          <div className="rounded-[24px] border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-500 shadow-sm">
+            캘린더 데이터를 불러오는 중입니다.
+          </div>
+        ) : null}
 
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_390px]">
           <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -798,7 +932,7 @@ function CalendarPage() {
                       <div className="mt-3 space-y-1.5">
                         {visibleEvents.map((event) => {
                           const theme =
-                            EVENT_THEMES[event.color] ?? EVENT_THEMES.primary;
+                            EVENT_THEMES[event.color] ?? EVENT_THEMES.green;
 
                           return (
                             <button
@@ -849,7 +983,7 @@ function CalendarPage() {
                 {visibleEvents.length > 0 ? (
                   visibleEvents.map((event) => {
                     const theme =
-                      EVENT_THEMES[event.color] ?? EVENT_THEMES.primary;
+                      EVENT_THEMES[event.color] ?? EVENT_THEMES.green;
 
                     return (
                       <button
@@ -1019,6 +1153,7 @@ function CalendarPage() {
           key={`${todoDialog.mode}-${todoDialog.todoId ?? "new"}`}
           mode={todoDialog.mode}
           initialValues={buildTodoFormInitialValues(selectedDate, editingTodo)}
+          projectOptions={projectOptions}
           onClose={() => setTodoDialog(null)}
           onDelete={
             todoDialog.mode === "edit" && editingTodo
@@ -1037,6 +1172,7 @@ function CalendarPage() {
             selectedDate,
             editingEvent,
           )}
+          projectOptions={projectOptions}
           onClose={() => setEventDialog(null)}
           onSubmit={handleSubmitEvent}
         />
