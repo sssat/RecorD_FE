@@ -42,7 +42,7 @@ function SummaryResult({
   actionItems = [],
   actionItemChecks = [],
   editable = false,
-  summaryTitle = "AI 요약",
+  summaryTitle = "ai요약",
   onSummaryChange,
   onKeyPointsChange,
   onActionItemChange,
@@ -156,7 +156,7 @@ function SummaryResult({
       <section className="overflow-hidden rounded-[28px] border border-[#b6e6dc] bg-gradient-to-r from-[#e8faf7] via-[#effaf4] to-[#f4fbdd] shadow-sm">
         <div className="px-6 py-5">
           <h2 className="text-[1.85rem] font-black tracking-tight text-slate-900">
-            AI 요약
+            {summaryTitle}
           </h2>
           <p className="mt-4 whitespace-pre-line text-lg leading-9 text-slate-800">
             {summary || "저장된 요약 내용이 없습니다."}

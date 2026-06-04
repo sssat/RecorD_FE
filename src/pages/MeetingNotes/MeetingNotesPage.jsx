@@ -15,6 +15,8 @@ import VoiceUploader from "./VoiceUploader";
 
 const ALL_PROJECTS_OPTION = "전체 프로젝트";
 const PAGE_SIZE = 10;
+const MANUAL_SUMMARY_TITLE = "요약";
+const AI_SUMMARY_TITLE = "ai요약";
 
 function SearchIcon() {
   return (
@@ -186,6 +188,10 @@ function formatMeetingMeta(meetingNote, longDate = false) {
   return `${dateLabel} • ${formatDuration(meetingNote.durationMinutes)} • ${meetingNote.participants.length}명 참석`;
 }
 
+function getSummaryTitle(sourceType) {
+  return sourceType === "upload" ? AI_SUMMARY_TITLE : MANUAL_SUMMARY_TITLE;
+}
+
 function parseCommaSeparatedValue(value) {
   return value
     .split(",")
@@ -278,7 +284,7 @@ function buildMeetingDownloadText(meetingNote) {
     `참석자: ${meetingNote.participants.join(", ")}`,
     `태그: ${meetingNote.tags.map((tag) => `#${tag}`).join(", ")}`,
     "",
-    "[AI 요약]",
+    `[${getSummaryTitle(meetingNote.sourceType)}]`,
     meetingNote.summary,
     "",
     "[주요 논의 사항]",
@@ -613,7 +619,7 @@ function MeetingNoteFormDialog({
 
         <SummaryResult
           editable
-          summaryTitle="요약"
+          summaryTitle={getSummaryTitle(values.sourceType)}
           summary={values.summary}
           keyPoints={values.keyPointsText}
           actionItems={values.actionItems}
@@ -1084,6 +1090,7 @@ function MeetingNotesDetail({
       </section>
 
       <SummaryResult
+        summaryTitle={getSummaryTitle(meetingNote.sourceType)}
         summary={meetingNote.summary}
         keyPoints={meetingNote.keyPoints}
         actionItems={meetingNote.actionItems}

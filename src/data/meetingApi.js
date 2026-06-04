@@ -85,14 +85,19 @@ function parseDurationMinutes(value) {
 }
 
 function normalizeSourceType(value, fallbackValue = "manual") {
-  const normalizedValue = toTrimmedString(value);
+  const normalizedValue = toTrimmedString(value).toLowerCase();
 
-  return normalizedValue === "upload" ? "upload" : fallbackValue;
+  return normalizedValue === "upload" || normalizedValue === "ai"
+    ? "upload"
+    : fallbackValue;
 }
 
 function normalizeMeetingFields(rawMeeting, fallbackValues = {}) {
   const actionItems = normalizeStringList(
     pickFirstDefined(rawMeeting?.actionItems, rawMeeting?.action_items, []),
+  );
+  const aiGeneratedSummary = toTrimmedString(
+    pickFirstDefined(rawMeeting?.aiSummary, rawMeeting?.ai_summary),
   );
 
   return {
@@ -148,7 +153,12 @@ function normalizeMeetingFields(rawMeeting, fallbackValues = {}) {
       ),
     ),
     sourceType: normalizeSourceType(
-      pickFirstDefined(rawMeeting?.sourceType, fallbackValues.sourceType),
+      pickFirstDefined(
+        rawMeeting?.sourceType,
+        rawMeeting?.source_type,
+        aiGeneratedSummary ? "upload" : undefined,
+        fallbackValues.sourceType,
+      ),
       fallbackValues.sourceType ?? "manual",
     ),
     audioFileName: toTrimmedString(
@@ -157,18 +167,31 @@ function normalizeMeetingFields(rawMeeting, fallbackValues = {}) {
   };
 }
 
-function normalizeMeetingNote(rawMeeting) {
+function normalizeMeetingNote(rawMeeting, fallbackValues = {}) {
   return {
     id: String(rawMeeting?.id),
-    projectId: pickFirstDefined(rawMeeting?.projectId, rawMeeting?.project_id, null),
-    ...normalizeMeetingFields(rawMeeting),
+    projectId: pickFirstDefined(
+      rawMeeting?.projectId,
+      rawMeeting?.project_id,
+      fallbackValues.projectId,
+      null,
+    ),
+    ...normalizeMeetingFields(rawMeeting, fallbackValues),
     createdAt:
       toTrimmedString(
-        pickFirstDefined(rawMeeting?.createdAt, rawMeeting?.created_at),
+        pickFirstDefined(
+          rawMeeting?.createdAt,
+          rawMeeting?.created_at,
+          fallbackValues.createdAt,
+        ),
       ) || new Date().toISOString(),
     updatedAt:
       toTrimmedString(
-        pickFirstDefined(rawMeeting?.updatedAt, rawMeeting?.updated_at),
+        pickFirstDefined(
+          rawMeeting?.updatedAt,
+          rawMeeting?.updated_at,
+          fallbackValues.updatedAt,
+        ),
       ) || new Date().toISOString(),
   };
 }
@@ -365,13 +388,15 @@ export async function getMeetingProjects() {
 }
 
 export async function createMeetingNote(payload) {
+  const requestPayload = buildMeetingRequestPayload(payload);
+
   try {
     const response = await apiClient.post(
       "/api/meetings/",
-      buildMeetingRequestPayload(payload),
+      requestPayload,
     );
 
-    return normalizeMeetingNote(response.data);
+    return normalizeMeetingNote(response.data, requestPayload);
   } catch (error) {
     throw new Error(
       extractApiErrorMessage(error, "Failed to create the meeting note."),
@@ -380,13 +405,15 @@ export async function createMeetingNote(payload) {
 }
 
 export async function updateMeetingNote(meetingNoteId, payload) {
+  const requestPayload = buildMeetingRequestPayload(payload);
+
   try {
     const response = await apiClient.patch(
       `/api/meetings/${meetingNoteId}/`,
-      buildMeetingRequestPayload(payload),
+      requestPayload,
     );
 
-    return normalizeMeetingNote(response.data);
+    return normalizeMeetingNote(response.data, requestPayload);
   } catch (error) {
     throw new Error(
       extractApiErrorMessage(error, "Failed to update the meeting note."),
