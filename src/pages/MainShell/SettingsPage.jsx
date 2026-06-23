@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   clearAuthStorage,
@@ -14,14 +14,13 @@ function SettingsPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(() => getStoredProfile());
 
-  // 1. [GET] 내 프로필 조회
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const currentProfile = await fetchCurrentUserProfile();
         setProfile(currentProfile);
       } catch (error) {
-        console.error('프로필 정보를 불러오지 못했습니다.', error);
+        console.error('프로필 정보를 불러오지 못했습니다:', error);
         setProfile(getStoredProfile());
       }
     };
@@ -29,45 +28,46 @@ function SettingsPage() {
     fetchProfile();
   }, []);
 
-  // 2. [PATCH] 내 프로필 수정
   const handleUpdateProfile = async () => {
     try {
       const updatedProfile = await updateCurrentUserProfile(profile);
       setProfile(updatedProfile);
-      alert('프로필이 성공적으로 저장되었습니다.\n새로고침 시 최신 정보가 반영됩니다.');
+      alert('프로필이 저장되었습니다.');
     } catch (error) {
-      console.error('프로필 수정 실패:', error);
+      console.error('프로필 저장 실패:', error);
       alert('프로필 저장에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
-  // 3. [POST] 로그아웃
   const handleLogout = async () => {
-    if (window.confirm('로그아웃 하시겠습니까?')) {
-      try {
-        await logoutFromServer();
-      } catch (error) {
-        console.error('서버 로그아웃 처리 실패 (무시하고 로컬 로그아웃 진행)', error);
-      } finally {
-        // 성공하든 실패하든 브라우저의 토큰을 모두 지우고 로그인 화면으로 이동
-        clearAuthStorage();
-        navigate('/login');
-      }
+    if (!window.confirm('로그아웃 하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await logoutFromServer();
+    } catch (error) {
+      console.error('서버 로그아웃 처리에 실패했습니다:', error);
+    } finally {
+      clearAuthStorage();
+      navigate('/login');
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (window.confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
-      try {
-        await withdrawFromServer();
-        clearProfileNameOverride(profile.email);
-        clearAuthStorage();
-        alert('회원 탈퇴가 완료되었습니다.');
-        navigate('/login');
-      } catch (error) {
-        console.error('회원 탈퇴 실패:', error);
-        alert('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
-      }
+    if (!window.confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      await withdrawFromServer();
+      clearProfileNameOverride(profile.email);
+      clearAuthStorage();
+      alert('회원 탈퇴가 완료되었습니다.');
+      navigate('/login');
+    } catch (error) {
+      console.error('회원 탈퇴 실패:', error);
+      alert('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -75,7 +75,9 @@ function SettingsPage() {
     <div className="w-full space-y-8 font-sans pb-10">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">설정</h1>
-        <p className="mt-2 text-[15px] font-medium text-slate-400">계정 정보와 애플리케이션 설정을 관리하세요</p>
+        <p className="mt-2 text-[15px] font-medium text-slate-400">
+          계정 정보와 애플리케이션 설정을 관리하세요
+        </p>
       </div>
 
       <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
@@ -87,16 +89,18 @@ function SettingsPage() {
 
         <div>
           <h3 className="text-[17px] font-bold text-slate-900">카카오 계정으로 로그인</h3>
-          <p className="text-[13px] font-medium text-slate-400 mt-0.5">카카오 소셜 로그인 사용 중</p>
+          <p className="text-[13px] font-medium text-slate-400 mt-0.5">
+            카카오 소셜 로그인을 사용 중입니다
+          </p>
         </div>
       </div>
 
       <section className="rounded-2xl border border-slate-100 bg-white p-7 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-2 mb-7">
-           <svg className="h-6 w-6 text-[#3A3A3A]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-             <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-           </svg>
-           <h2 className="text-xl font-extrabold tracking-tight text-slate-900">프로필</h2>
+          <svg className="h-6 w-6 text-[#3A3A3A]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <h2 className="text-xl font-extrabold tracking-tight text-slate-900">프로필</h2>
         </div>
 
         <div className="space-y-6">
@@ -104,14 +108,16 @@ function SettingsPage() {
             <label className="text-sm font-semibold text-slate-600">닉네임</label>
             <input
               type="text"
-              value={profile.name} // nickname -> name 변경
+              value={profile.name || ''}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              placeholder="카카오 사용자"
               className="w-full rounded-xl border border-slate-200 bg-[#f8fafc] px-4 py-3.5 text-[15px] font-medium text-slate-800 focus:border-[#3A3A3A] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#3A3A3A] transition-colors"
             />
-            <p className="text-[13px] text-slate-400">카카오 계정의 닉네임이 변경됩니다</p>
+            <p className="text-[13px] text-slate-400">
+              카카오 닉네임을 기반으로 표시됩니다. 이 화면에서 별도로 수정할 수 있습니다.
+            </p>
           </div>
 
-          {/* 이메일 (읽기 전용) */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-600">이메일</label>
             <div className="relative flex items-center w-full rounded-xl border border-slate-200 bg-[#f8fafc] px-4 py-3.5 opacity-80 cursor-not-allowed">
@@ -127,12 +133,8 @@ function SettingsPage() {
               />
             </div>
 
-            <p className="text-[13px] text-slate-400 flex items-center gap-1.5">
-              이메일은 카카오 계정 설정에서만 변경 가능합니다
-              <a href="https://accounts.kakao.com" target="_blank" rel="noreferrer" className="text-[#3A3A3A] font-semibold hover:text-[#000000] hover:underline flex items-center">
-                카카오 계정 설정
-                <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-              </a>
+            <p className="text-[13px] text-slate-400">
+              이 앱은 현재 카카오 이메일 권한 없이 닉네임 기반으로 로그인합니다.
             </p>
           </div>
 
@@ -150,22 +152,30 @@ function SettingsPage() {
         <div className="space-y-3">
           <div onClick={handleLogout} className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50 cursor-pointer group shadow-sm">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center text-slate-400 group-hover:text-slate-600 transition-colors">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </div>
 
             <div>
               <h3 className="text-[15px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">로그아웃</h3>
-              <p className="text-[13px] font-medium text-slate-400 mt-0.5">카카오 계정에서 로그아웃합니다</p>
+              <p className="text-[13px] font-medium text-slate-400 mt-0.5">
+                현재 브라우저의 로그인 정보를 삭제합니다
+              </p>
             </div>
           </div>
 
           <div onClick={handleDeleteAccount} className="flex items-center gap-4 rounded-xl border border-[#ff8787] bg-white p-4 transition hover:bg-[#fff0f0] cursor-pointer group shadow-sm">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#ff6b6b]">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </div>
             <div>
               <h3 className="text-[15px] font-bold text-[#ff6b6b]">회원 탈퇴</h3>
-              <p className="text-[13px] font-medium text-slate-400 mt-0.5">카카오 연결을 끊고 모든 데이터가 삭제됩니다</p>
+              <p className="text-[13px] font-medium text-slate-400 mt-0.5">
+                계정과 연결된 데이터를 삭제합니다
+              </p>
             </div>
           </div>
         </div>

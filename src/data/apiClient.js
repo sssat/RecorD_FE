@@ -34,7 +34,7 @@ const AUTH_CONTAINER_KEYS = [
 ];
 
 const DEFAULT_API_TIMEOUT_MS = 20000;
-export const LONG_RUNNING_API_TIMEOUT_MS = 300000;
+export const LONG_RUNNING_API_TIMEOUT_MS = 90000;
 
 function getApiBaseUrl() {
   return (

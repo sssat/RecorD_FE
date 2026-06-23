@@ -52,6 +52,12 @@ const pickFirstString = (...values) =>
 const pickAuthPayload = (data = {}) =>
   data.tokens || data.token || data.auth || data.data || data.result || data;
 
+export const isInternalKakaoEmail = (email = '') =>
+  typeof email === 'string' && email.endsWith('@kakao.local');
+
+export const formatDisplayEmail = (email = '') =>
+  email && !isInternalKakaoEmail(email) ? email : '';
+
 export const normalizeProfile = (data = {}) => {
   const authPayload = pickAuthPayload(data);
   const source =
@@ -66,6 +72,8 @@ export const normalizeProfile = (data = {}) => {
   const kakaoAccount = source.kakao_account || data.kakao_account || {};
   const properties = source.properties || data.properties || {};
 
+  const email = pickFirstString(source.email, kakaoAccount.email);
+
   return {
     name: pickFirstString(
       source.name,
@@ -75,7 +83,7 @@ export const normalizeProfile = (data = {}) => {
       properties.nickname,
       kakaoAccount.profile?.nickname
     ),
-    email: pickFirstString(source.email, kakaoAccount.email),
+    email: formatDisplayEmail(email),
   };
 };
 

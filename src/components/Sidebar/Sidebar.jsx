@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { fetchCurrentUserProfile, getStoredProfile } from '../../utils/auth';
 
@@ -85,19 +85,18 @@ function UserProfileCard() {
     const fetchUser = async () => {
       try {
         const profile = await fetchCurrentUserProfile();
-
         setUser(
           profile.name || profile.email
             ? profile
-            : { name: '사용자', email: '이메일 정보 없음' }
+            : { name: '카카오 사용자', email: '' }
         );
       } catch (error) {
-        console.error('사이드바 사용자 정보 로드 실패:', error);
+        console.error('사이드바 사용자 정보를 불러오지 못했습니다:', error);
         const storedProfile = getStoredProfile();
         setUser(
           storedProfile.name || storedProfile.email
             ? storedProfile
-            : { name: '사용자', email: '프로필 정보를 불러오지 못했습니다' }
+            : { name: '카카오 사용자', email: '' }
         );
       }
     };
@@ -105,15 +104,17 @@ function UserProfileCard() {
     fetchUser();
   }, []);
 
+  const displayName = user.name || '카카오 사용자';
+  const displayEmail = user.email || '닉네임 기반 로그인';
+
   return (
     <div className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-slate-400 hover:bg-white group">
-      {/* 프로필 이미지 (이름 첫 글자 추출) */}
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#3A3A3A] text-lg font-semibold text-white">
-        {user.name ? user.name.charAt(0) : 'U'}
+        {displayName.charAt(0)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-base font-semibold text-slate-900 truncate">{user.name}</p>
-        <p className="truncate text-sm text-slate-400">{user.email}</p>
+        <p className="text-base font-semibold text-slate-900 truncate">{displayName}</p>
+        <p className="truncate text-sm text-slate-400">{displayEmail}</p>
       </div>
       <button
         type="button"

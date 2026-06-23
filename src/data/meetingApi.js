@@ -61,7 +61,9 @@ function parseDurationMinutes(value) {
     return Number(normalizedValue);
   }
 
-  const koreanMinuteMatch = normalizedValue.match(/(\d+)\s*분/);
+  const koreanMinuteMatch = normalizedValue.match(
+    /(\\d+)\\s*(?:��|min|minute|minutes)/i,
+  );
 
   if (koreanMinuteMatch) {
     return Number(koreanMinuteMatch[1]);
@@ -250,14 +252,6 @@ async function getPaginatedResults(path, params = {}) {
   return collectedResults;
 }
 
-function buildProjectOptionsFromMeetingNotes(meetingNotes) {
-  return Array.from(
-    new Set(
-      meetingNotes.map((meetingNote) => meetingNote.project).filter(Boolean),
-    ),
-  );
-}
-
 function normalizeMeetingProjectsResponse(responseData) {
   let rawProjects = [];
 
@@ -344,7 +338,7 @@ export async function getMeetingNotes() {
     throw new Error(
       extractApiErrorMessage(
         error,
-        "Failed to load meeting notes from the server.",
+        "Failed to load meeting notes.",
       ),
     );
   }
@@ -358,33 +352,16 @@ export async function getMeetingProjects() {
     if (normalizedProjects.length > 0) {
       return normalizedProjects;
     }
+
+    return [];
   } catch (error) {
-    try {
-      const meetingNotes = await getMeetingNotes();
-      const fallbackProjects = buildProjectOptionsFromMeetingNotes(meetingNotes);
-
-      if (fallbackProjects.length > 0) {
-        return fallbackProjects;
-      }
-    } catch {
-      throw new Error(
-        extractApiErrorMessage(
-          error,
-          "Failed to load the meeting project list from the server.",
-        ),
-      );
-    }
-
     throw new Error(
       extractApiErrorMessage(
         error,
-        "Failed to load the meeting project list from the server.",
+        "Failed to load meeting projects.",
       ),
     );
   }
-
-  const meetingNotes = await getMeetingNotes();
-  return buildProjectOptionsFromMeetingNotes(meetingNotes);
 }
 
 export async function createMeetingNote(payload) {
@@ -399,7 +376,10 @@ export async function createMeetingNote(payload) {
     return normalizeMeetingNote(response.data, requestPayload);
   } catch (error) {
     throw new Error(
-      extractApiErrorMessage(error, "Failed to create the meeting note."),
+      extractApiErrorMessage(
+        error,
+        "Failed to create the meeting note.",
+      ),
     );
   }
 }
@@ -416,7 +396,10 @@ export async function updateMeetingNote(meetingNoteId, payload) {
     return normalizeMeetingNote(response.data, requestPayload);
   } catch (error) {
     throw new Error(
-      extractApiErrorMessage(error, "Failed to update the meeting note."),
+      extractApiErrorMessage(
+        error,
+        "Failed to update the meeting note.",
+      ),
     );
   }
 }
@@ -427,7 +410,10 @@ export async function deleteMeetingNote(meetingNoteId) {
     return true;
   } catch (error) {
     throw new Error(
-      extractApiErrorMessage(error, "Failed to delete the meeting note."),
+      extractApiErrorMessage(
+        error,
+        "Failed to delete the meeting note.",
+      ),
     );
   }
 }
@@ -460,7 +446,7 @@ export async function generateMeetingDraftFromAudio(file, project) {
     throw new Error(
       extractApiErrorMessage(
         error,
-        "녹음 파일로 회의록 초안을 생성하지 못했습니다.",
+        "Failed to create a meeting draft from the audio file.",
       ),
     );
   }

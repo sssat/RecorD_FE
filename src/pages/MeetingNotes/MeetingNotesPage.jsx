@@ -523,7 +523,7 @@ function MeetingNoteCard({ meetingNote, projectTheme }) {
 
 function MeetingNoteFormDialog({
   mode,
-  projects,
+  projects = [],
   values,
   error,
   isSaving,
@@ -822,7 +822,7 @@ function MeetingNotesList({
   onProjectChange,
   onOpenUploadDialog,
   onOpenCreateChooser,
-  projects,
+  projects = [],
   projectThemeMap,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -1153,10 +1153,12 @@ function MeetingNotesPage() {
     {},
   );
 
+  const projectList = Array.isArray(projects) ? projects : [];
+
   const defaultProject =
     selectedProject !== ALL_PROJECTS_OPTION
       ? selectedProject
-      : (projects[0] ?? "포트폴리오 관리 시스템");
+      : (projectList[0] ?? "포트폴리오 관리 시스템");
 
   useEffect(() => {
     let isMounted = true;
@@ -1176,7 +1178,7 @@ function MeetingNotesPage() {
         }
 
         setMeetingNotes(sortMeetingNotes(fetchedMeetingNotes));
-        setProjects(fetchedProjects);
+        setProjects(Array.isArray(fetchedProjects) ? fetchedProjects : []);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -1212,7 +1214,12 @@ function MeetingNotesPage() {
     );
 
     setProjects((currentProjects) =>
-      Array.from(new Set([...currentProjects, ...nextProjects])).filter(
+      Array.from(
+        new Set([
+          ...(Array.isArray(currentProjects) ? currentProjects : []),
+          ...nextProjects,
+        ]),
+      ).filter(
         Boolean,
       ),
     );
@@ -1347,9 +1354,11 @@ function MeetingNotesPage() {
 
       if (fieldName === "actionItemToggle") {
         const toggleIndex = nextValue.actionItemIndex;
-        nextValues.actionItemChecks = [
-          ...(currentState.values.actionItemChecks ?? []),
-        ];
+        nextValues.actionItemChecks = Array.isArray(
+          currentState.values.actionItemChecks,
+        )
+          ? [...currentState.values.actionItemChecks]
+          : [];
         nextValues.actionItemChecks[toggleIndex] = !Boolean(
           nextValues.actionItemChecks[toggleIndex],
         );
@@ -1648,7 +1657,7 @@ function MeetingNotesPage() {
       {formDialog.open && formDialog.values ? (
         <MeetingNoteFormDialog
           mode={formDialog.mode}
-          projects={projects.length > 0 ? projects : [defaultProject]}
+          projects={projectList.length > 0 ? projectList : [defaultProject]}
           values={formDialog.values}
           error={formDialog.error}
           isSaving={formDialog.isSaving}
